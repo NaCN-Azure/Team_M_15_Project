@@ -7,8 +7,8 @@ import pymysql
 def get_connect():                  # To connect with the database
     return pymysql.connect(         # This is my localhost, If you want to test yours, just switch
         host = 'localhost',
-        user = 'NaCN',
-        password = 'Nasiyu0627',
+        user = 'root',
+        password = '123456',
         database = 'bicycle',
         charset='utf8'
     )
