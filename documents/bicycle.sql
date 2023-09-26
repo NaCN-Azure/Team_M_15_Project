@@ -11,7 +11,7 @@
  Target Server Version : 80019
  File Encoding         : 65001
 
- Date: 26/09/2023 13:24:55
+ Date: 26/09/2023 14:04:35
 */
 
 SET NAMES utf8mb4;
@@ -50,9 +50,9 @@ CREATE TABLE `order`  (
   `to_longitude` double NULL DEFAULT NULL,
   `from_latitude` double NULL DEFAULT NULL,
   `to_latitude` double NULL DEFAULT NULL,
-  `duration_minutes` double NULL DEFAULT NULL,
+  `start_date` datetime NULL DEFAULT NULL,
   `cost` double NULL DEFAULT NULL,
-  `date` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `end_date` datetime NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
