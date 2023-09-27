@@ -8,3 +8,8 @@
 - Directory "images" contains some images that we may use to decorate our Front Pages
 - Otherwise, If there's any questions, just talk on Whatspp or Team, 
 - Or if somebody want to update his or her codes, just pull it and merge it, and you can add commit information in README.md just like I did. 
+
+2023.9.27:(Written By Na Siyu)
+- update the login.page(using ttkbootstrap based on tkinder)
+- login only contains the element, no events here, still needs interfaces or services on it
+- before run the data, you must use pip install package **ttkbootstrap** and **pytkUI** first!!!
