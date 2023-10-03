@@ -1,11 +1,12 @@
 from tkinter import *
 from tkinter.ttk import *
-
+from PIL import ImageTk,Image
 
 class WinGUI(Tk):
     def __init__(self):
         super().__init__()
         self.__win()
+        self.tk_icon_big = self.__tk_icon_big(self)
         self.tk_label_login = self.__tk_label_login(self)
         self.tk_input_input_username = self.__tk_input_input_username(self)
         self.tk_input_input_password = self.__tk_input_input_password(self)
@@ -16,7 +17,6 @@ class WinGUI(Tk):
 
     def __win(self):
         self.title("Bicycle")
-        # 设置窗口大小、居中
         width = 341
         height = 422
         screenwidth = self.winfo_screenwidth()
@@ -40,7 +40,7 @@ class WinGUI(Tk):
         bar.lower(widget)
 
     def vbar(self, ele, x, y, w, h, parent):
-        sw = 15  # Scrollbar 宽度
+        sw = 15
         x = x + w - sw
         vbar = Scrollbar(parent)
         ele.configure(yscrollcommand=vbar.set)
@@ -83,6 +83,13 @@ class WinGUI(Tk):
         btn.place(x=190, y=350, width=112, height=41)
         return btn
 
+    def __tk_icon_big(self, parent):
+        image_open = Image.open("..\images\login\login_big.png").resize((120,120))
+        icon_big = ImageTk.PhotoImage(image_open)
+        label = Label(parent, image=icon_big)
+        label.image = icon_big
+        label.place(x=110, y=30)
+        return label
 
 class Win(WinGUI):
     def __init__(self):
@@ -91,7 +98,6 @@ class Win(WinGUI):
 
     def __event_bind(self):
         pass
-
 
 if __name__ == "__main__":
     win = Win()
