@@ -1,6 +1,9 @@
 from tkinter import *
 from tkinter.ttk import *
+
+import requests
 from PIL import ImageTk,Image
+from io import BytesIO
 
 class WinGUI(Tk):
     def __init__(self):
@@ -19,6 +22,7 @@ class WinGUI(Tk):
         self.title("Bicycle")
         width = 341
         height = 422
+        self.config(background='white')
         screenwidth = self.winfo_screenwidth()
         screenheight = self.winfo_screenheight()
         geometry = '%dx%d+%d+%d' % (width, height, (screenwidth - width) / 2, (screenheight - height) / 2)
@@ -84,7 +88,10 @@ class WinGUI(Tk):
         return btn
 
     def __tk_icon_big(self, parent):
-        image_open = Image.open("..\images\login\login_big.png").resize((120,120))
+        web_image_icon = requests.get('https://static-00.iconduck.com/assets.00/person-icon-1901x2048-a9h70k71.png')
+        temp = BytesIO(web_image_icon.content)
+        image_open = Image.open(temp).resize((120, 120))
+        # image_open = Image.open("..\images\login\login_big.png").resize((120,120))
         icon_big = ImageTk.PhotoImage(image_open)
         label = Label(parent, image=icon_big)
         label.image = icon_big

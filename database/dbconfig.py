@@ -6,9 +6,9 @@ import pymysql
 
 def get_connect():                  # To connect with the database
     return pymysql.connect(         # This is my localhost, If you want to test yours, just switch
-        host = 'localhost',
+        host = 'bicycle.czqjywcslq6r.us-east-1.rds.amazonaws.com',
         user = 'root',
-        password = '123456',
+        password = '12345678',
         database = 'bicycle',
         charset='utf8'
     )
