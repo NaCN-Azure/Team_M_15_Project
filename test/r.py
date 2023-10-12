@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH
 from tkinter.ttk import *
-import database.dbconfig as db
-import database.Bike as Bike
-import database.Order as Order
-import database.Report as Report
-import database.User as User
+import db.db_config as db
+import db.Bike as Bike
+import db.Order as Order
+import db.Report as Report
+import db.User as User
 
 class WinGUI(tk.Tk):
     def __init__(self):
@@ -33,7 +33,8 @@ class WinGUI(tk.Tk):
         self.show_map_page()  # 默认显示地图页面
 
     def __win(self):
-        operator_info = db.query_data(User.getUserInfo(3))
+        operator_info = db.query_data(User.getUserInfo(3)) # TODO this is just a test of showing id
+        print(operator_info)
         self.title("Operator: "+operator_info[0]['user_name'])
         width = 783
         height = 322

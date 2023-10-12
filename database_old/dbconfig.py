@@ -1,10 +1,10 @@
 import pymysql
 
-# This file is more like an serviceImpl connected with database and the python itself
+# This file is more like an serviceImpl connected with database_old and the python itself
 # It looks like a back-end but not a true one
 # When use this method which I package, just import it, and send the sql sentence afterwards
 
-def get_connect():                  # To connect with the database
+def get_connect():                  # To connect with the database_old
     return pymysql.connect(         # This is my localhost, If you want to test yours, just switch
         host = 'bicycle.czqjywcslq6r.us-east-1.rds.amazonaws.com',
         user = 'root',

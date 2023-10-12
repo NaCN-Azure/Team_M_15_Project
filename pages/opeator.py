@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter.ttk import *
-import database.dbconfig as db
-import database.Bike as Bike
-import database.Order as Order
-import database.Report as Report
-import database.User as User
+import database_old.dbconfig as db
+import database_old.Bike as Bike
+import database_old.Order as Order
+import database_old.Report as Report
+import database_old.User as User
 
 class WinGUI(tk.Tk):
     def __init__(self):
