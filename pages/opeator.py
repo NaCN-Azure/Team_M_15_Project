@@ -126,19 +126,8 @@ class WinGUI(tk.Tk):
         frame = Frame(parent)
         frame.place(x=10, y=50, width=607, height=233)
         self.configure_frame_border(frame)
-
-        canvas = tk.Canvas(frame)
-        canvas.pack(side="left", fill="both", expand=True)
-        vbar = Scrollbar(frame, orient="vertical")
-        vbar.pack(side="right", fill="y")
-        canvas.configure(yscrollcommand=vbar.set)
-        vbar.configure(command=canvas.yview)
-        frame_content = Frame(canvas)
-        canvas.create_window((0, 0), window=frame_content, anchor="nw")
-        frame_content.update_idletasks()
-        canvas.configure(scrollregion=canvas.bbox("all"))
-
         return frame
+
     def __tk_scale_slide(self, parent):
         scale = Scale(parent)
         scale.place(relx=0.02, rely=0.95, anchor=tk.SW, width=150, height=30)
