@@ -78,7 +78,7 @@ class WinGUI(tk.Tk):
         btn.place(x=10, y=90, width=80, height=48)
         return btn
     def __tk_button_DetailButton(self, parent):
-        btn = Button(parent, text="Details", takefocus=False, )
+        btn = Button(parent, text="Details", takefocus=False, command=self.show_detail_page)
         btn.place(x=10, y=160, width=80, height=48)
         return btn
     def __tk_button_InfoButton(self, parent):
@@ -132,45 +132,25 @@ class WinGUI(tk.Tk):
         scale = Scale(parent)
         scale.place(relx=0.02, rely=0.95, anchor=tk.SW, width=150, height=30)
         return scale
-    # def report_lists(self, parent, user_name, comment, date, frame_index):
-    #     frame = Frame(parent)
-    #     frame.place(relx=0.05, rely=frame_index * 0.12, width=0.9, height=0.1)
-    #     frame.configure(style="My.TFrame")
-    #
-    #     label_user = Label(frame, text=user_name, anchor="center")
-    #     label_user.place(relx=0.05, rely=0.1, width=0.2, height=0.8)
-    #
-    #     text_comment = tk.Text(frame)
-    #     text_comment.place(relx=0.3, rely=0.1, width=0.5, height=0.8)
-    #     text_comment.insert("1.0", comment)
-    #     self.vbar(text_comment, 0.3, 0.1, 0.5, 0.8, frame)
-    #
-    #     label_date = Label(frame, text=date, anchor="center")
-    #     label_date.place(relx=0.85, rely=0.1, width=0.15, height=0.8)
-    #
-    #     button_deal = Button(frame, text="Check", takefocus=False)
-    #     button_deal.place(relx=0.95, rely=0.1, width=0.05, height=0.8)
-    #
-    #     return frame 使用相对布局的
 
     def report_lists(self, parent, user_name, comment, date, frame_index):
         frame = Frame(parent)
-        frame.place(x=5, y=10 + frame_index * 60, width=600, height=50)
+        frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
 
         label_user = Label(frame, text=user_name, anchor="center")
-        label_user.place(x=10, y=10, width=100, height=30)
+        label_user.place(x=5, y=10, width=100, height=30)
 
         text_comment = tk.Text(frame)
-        text_comment.place(x=120, y=10, width=300, height=30)
+        text_comment.place(x=100, y=10, width=300, height=30)
         text_comment.insert("1.0", comment)
         self.vbar(text_comment, 120, 10, 300, 30, frame)
 
         label_date = Label(frame, text=date, anchor="center")
-        label_date.place(x=430, y=10, width=100, height=30)
+        label_date.place(x=400, y=10, width=100, height=30)
 
         button_deal = Button(frame, text="Check", takefocus=False)
-        button_deal.place(x=540, y=10, width=50, height=30)
+        button_deal.place(x=500, y=10, width=50, height=30)
 
         return frame
 
@@ -190,7 +170,6 @@ class WinGUI(tk.Tk):
             {"user_name": "User5", "comment": "Report 5 comment", "date": "06/10/2023"},
             {"user_name": "User6", "comment": "Report 6 comment", "date": "06/10/2023"},
             {"user_name": "User7", "comment": "Report 7 comment", "date": "06/10/2023"},
-
             # 添加更多报告数据
         ]
 
@@ -207,11 +186,6 @@ class WinGUI(tk.Tk):
                 data["date"],
                 index
             )
-
-        style = Style()
-        style.configure("Yellow.TFrame", background="yellow")  # 定义一个名为Yellow.TFrame的样式
-        self.tk_frame_reports_container.configure(style="Yellow.TFrame")
-
         self.tk_frame_reports_container.place(x=10, y=50, width=607, height=233)
 
     def show_map_page(self):
@@ -222,6 +196,15 @@ class WinGUI(tk.Tk):
 
         # 显示地图控件
         self.tk_frame_mapBox.place(x=10, y=50, width=607, height=233)
+
+    def show_detail_page(self):
+        # 隐藏报告控件
+        self.tk_frame_reports_container.place_forget()
+        self.tk_frame_mapBox.place_forget()
+        self.tk_frame_info.place_forget()
+
+        # 显示地图控件
+        self.tk_frame_detailed.place(x=10, y=50, width=607, height=233)
 
 class Win(WinGUI):
     def __init__(self):
