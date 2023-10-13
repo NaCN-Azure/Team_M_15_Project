@@ -1,13 +1,6 @@
 import sqlite3
 def get_connect():                  # To connect with the database_old
-    return sqlite3.connect("database.db")
-#   as db:
-    #     cursor = db.cursor()
-    #     cursor.execute("""CREATE TABLE IF NOT EXISTS users(
-    # 	id integer PRIMARY KEY,
-    # 	username text NOT NULL,
-    # 	password text NOT NULL);""")
-    # return db
+    return sqlite3.connect("..\db\database.db")
 
 def query_data(sql):        # This method means to search the data from db, return with list with dict element
     database = get_connect()
@@ -28,21 +21,3 @@ def insert_or_delete_data(sql):
         database.commit()
     finally:
         database.close()
-
-# class db_config():
-#     with sqlite3.connect("database_old.db") as db:
-#         cursor = db.cursor()
-#         cursor.execute("""CREATE TABLE IF NOT EXISTS users(
-#     	id integer PRIMARY KEY,
-#     	username text NOT NULL,
-#     	password text NOT NULL);""")
-#
-#
-#     def login (username, password):
-#         with sqlite3.connect("database_old.db") as db:
-#             cursor = db.cursor()
-#             cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?",(username, password))
-#             print(cursor.fetchall())
-#             db.close()
-#             print("New user added to db")
-#             return 0

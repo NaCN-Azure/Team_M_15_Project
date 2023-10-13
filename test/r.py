@@ -177,17 +177,21 @@ class WinGUI(tk.Tk):
             widget.destroy()
 
         self.tk_canvas_reports_container.configure(height=canvas_height,scrollregion=(0, 0, 607, canvas_height))
-        self.tk_canvas_reports_container.place(x=10, y=50, width=607, height=canvas_height)
+        self.tk_canvas_reports_container.place(x=10, y=50, width=607, height=233)
         vbar = Scrollbar(self.tk_canvas_reports_container, orient=VERTICAL)
         vbar.pack(side=RIGHT, fill=Y)
 
         frame = Frame(self.tk_canvas_reports_container,width=580,height=canvas_height)
         self.configure_frame_border(frame)
-        self.tk_canvas_reports_container.create_window((0, 0), window=frame, anchor='nw')
-        self.tk_canvas_reports_container.configure(yscrollcommand=vbar.set)
-        self.tk_canvas_reports_container.bind('<Configure>', lambda e: vbar.configure(command=self.tk_canvas_reports_container.yview))
+        frame.pack()
 
-        print(canvas_height)
+        frame.bind("<Configure>", lambda e: self.tk_canvas_reports_container.configure(
+            scrollregion=self.tk_canvas_reports_container.bbox("all")))
+
+        self.tk_canvas_reports_container.create_window((0, 0), window=frame, anchor="nw")
+        self.tk_canvas_reports_container.configure(yscrollcommand=vbar.set)
+        vbar.configure(command=self.tk_canvas_reports_container.yview)
+
         for index, data in enumerate(report_data):
             self.report_lists(
                 frame,
@@ -196,7 +200,6 @@ class WinGUI(tk.Tk):
                 data["date"],
                 index
             )
-            print(index,data)
 
     def show_map_page(self):
         # 隐藏报告控件
@@ -227,3 +230,4 @@ class Win(WinGUI):
 if __name__ == "__main__":
     win = Win()
     win.mainloop()
+    db.get_connect().close()

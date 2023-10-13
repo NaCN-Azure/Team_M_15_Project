@@ -1,10 +1,11 @@
 import tkinter as tk
+from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH
 from tkinter.ttk import *
-import database_old.dbconfig as db
-import database_old.Bike as Bike
-import database_old.Order as Order
-import database_old.Report as Report
-import database_old.User as User
+import db.db_config as db
+import db.Bike as Bike
+import db.Order as Order
+import db.Report as Report
+import db.User as User
 
 class WinGUI(tk.Tk):
     def __init__(self):
@@ -26,13 +27,14 @@ class WinGUI(tk.Tk):
         self.tk_frame_mapBox = self.__tk_frame_mapBox(self.tk_frame_right)
         self.tk_scale_slide = self.__tk_scale_slide(self.tk_frame_mapBox)
 
-        self.tk_frame_reports_container = self.__tk_frame_reports_container(self.tk_frame_right)
+        self.tk_canvas_reports_container = self.__tk_canvas_reports_container(self.tk_frame_right)
         self.tk_frame_detailed = self.__tk_frame_detailed(self.tk_frame_right)
         self.tk_frame_info = self.__tk_frame_info(self.tk_frame_right)
-        self.show_map_page()  # 默认显示地图页面
+        self.show_map_page()  # default showing map pages
 
     def __win(self):
-        operator_info = db.query_data(User.getUserInfo(3))
+        operator_info = db.query_data(User.getUserInfo(3)) # TODO this is just a test of showing id
+        print(operator_info)
         self.title("Operator: "+operator_info[0]['user_name'])
         width = 783
         height = 322
@@ -106,7 +108,7 @@ class WinGUI(tk.Tk):
 
     def __tk_frame_mapBox(self, parent):
         frame = Frame(parent)
-        frame.place(x=10, y=50, width=607, height=233)  # 修改位置
+        frame.place(x=10, y=50, width=607, height=233) # this is the containor of map
         self.configure_frame_border(frame)
         return frame
 
@@ -122,19 +124,18 @@ class WinGUI(tk.Tk):
         self.configure_frame_border(frame)
         return frame
 
-    def __tk_frame_reports_container(self, parent):
-        frame = Frame(parent)
-        frame.place(x=10, y=50, width=607, height=233)
-        self.configure_frame_border(frame)
-        return frame
+    def __tk_canvas_reports_container(self, parent):
+        canvas = tk.Canvas(parent)
+        canvas.place(x=10, y=50, width=607, height=233) # this is the containor of reports, IMPORTANT!! IT IS CANVAS!!
+        return canvas
 
     def __tk_scale_slide(self, parent):
         scale = Scale(parent)
         scale.place(relx=0.02, rely=0.95, anchor=tk.SW, width=150, height=30)
         return scale
 
-    def report_lists(self, parent, user_name, comment, date, frame_index):
-        frame = Frame(parent)
+    def report_lists(self, parent, user_name, comment, date, frame_index):  # this method is to show lots of small frame in a canvas
+        frame = Frame(parent)                                               # You can copy it to other place you want
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
 
@@ -155,13 +156,12 @@ class WinGUI(tk.Tk):
         return frame
 
     def show_reports_page(self):
-        # 隐藏地图控件
+        # disappear the map frame
         self.tk_frame_mapBox.place_forget()
         self.tk_frame_detailed.place_forget()
         self.tk_frame_info.place_forget()
-        # 显示报告控件
-
-        # 获取用户报告数据，这里需要从数据库中获取数据
+        # then show the report canvas,
+        # TODO this is test data, real one should be taken by DB
         report_data = [
             {"user_name": "User1", "comment": "Report 1 comment", "date": "06/09/2023"},
             {"user_name": "User2", "comment": "Report 2 comment", "date": "06/10/2023"},
@@ -170,40 +170,48 @@ class WinGUI(tk.Tk):
             {"user_name": "User5", "comment": "Report 5 comment", "date": "06/10/2023"},
             {"user_name": "User6", "comment": "Report 6 comment", "date": "06/10/2023"},
             {"user_name": "User7", "comment": "Report 7 comment", "date": "06/10/2023"},
-            # 添加更多报告数据
+
         ]
+        canvas_height = len(report_data) * 70
+        for widget in self.tk_canvas_reports_container.winfo_children():
+            widget.destroy() #before show the lists, destroy the remain one first
 
-        # 清除之前的报告框架
-        for widget in self.tk_frame_reports_container.winfo_children():
-            widget.destroy()
+        self.tk_canvas_reports_container.configure(height=canvas_height,scrollregion=(0, 0, 607, canvas_height))
+        self.tk_canvas_reports_container.place(x=10, y=50, width=607, height=233)
+        vbar = Scrollbar(self.tk_canvas_reports_container, orient=VERTICAL)
+        vbar.pack(side=RIGHT, fill=Y)  #create a vbar for canvas first
 
-        # 创建并显示用户报告框架
+        frame = Frame(self.tk_canvas_reports_container,width=580,height=canvas_height)
+        self.configure_frame_border(frame)
+        frame.pack()        # then create a frame inside this canvas
+        frame.bind("<Configure>", lambda e: self.tk_canvas_reports_container.configure(
+            scrollregion=self.tk_canvas_reports_container.bbox("all")))  # connect the vbar with this frame
+
+        self.tk_canvas_reports_container.create_window((0, 0), window=frame, anchor="nw") # connect the frame with canvas
+        self.tk_canvas_reports_container.configure(yscrollcommand=vbar.set)
+        vbar.configure(command=self.tk_canvas_reports_container.yview) #apply the vbar
+
         for index, data in enumerate(report_data):
             self.report_lists(
-                self.tk_frame_reports_container,
+                frame,
                 data["user_name"],
                 data["comment"],
                 data["date"],
                 index
-            )
-        self.tk_frame_reports_container.place(x=10, y=50, width=607, height=233)
+            )                   # put your list inside the frame, NOT THE CANVAS!
 
     def show_map_page(self):
-        # 隐藏报告控件
-        self.tk_frame_reports_container.place_forget()
+        self.tk_canvas_reports_container.place_forget()
         self.tk_frame_detailed.place_forget()
         self.tk_frame_info.place_forget()
 
-        # 显示地图控件
         self.tk_frame_mapBox.place(x=10, y=50, width=607, height=233)
 
     def show_detail_page(self):
-        # 隐藏报告控件
-        self.tk_frame_reports_container.place_forget()
+        self.tk_canvas_reports_container.place_forget()
         self.tk_frame_mapBox.place_forget()
         self.tk_frame_info.place_forget()
 
-        # 显示地图控件
         self.tk_frame_detailed.place(x=10, y=50, width=607, height=233)
 
 class Win(WinGUI):
