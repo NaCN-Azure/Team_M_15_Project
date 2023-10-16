@@ -1,6 +1,6 @@
 import sqlite3
 def get_connect():                  # To connect with the database_old
-    return sqlite3.connect("..\db\database.db")
+    return sqlite3.connect("db\database.db")
 
 def query_data(sql):        # This method means to search the data from db, return with list with dict element
     database = get_connect()
