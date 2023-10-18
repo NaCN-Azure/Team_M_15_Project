@@ -1,46 +1,83 @@
 import tkinter as tk
-import os
+import hashlib
+from tkinter import messagebox
 
-def login():
-    username = login_username.get()
-    password = login_password.get()
+from opertor_view import Opertor
+from register import Register
+import db.db_config as db
+import db.Bike as Bike
+import db.Order as Order
+import db.Report as Report
+import db.User as User
+class Login:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Login Page")
 
-def register():
-    root.destroy()
-    os.system("python pages/register.py")
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        window_width = 400
+        window_height = 200
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.root.resizable(width=False, height=False)
 
-# Create the main window
-root = tk.Tk()
-root.title("Login Page")
+        self.login_frame = tk.Frame(self.root)
+        self.login_frame.pack(pady=20)
 
-# Increase the size of the window
-root.geometry("400x200")
+        self.login_label = tk.Label(self.login_frame, text="Login", font=("Helvetica", 16))
+        self.login_label.grid(row=0, column=0, columnspan=2)
 
-# Login Section
-login_frame = tk.Frame(root)
-login_frame.pack(pady=20)
+        self.login_username_label = tk.Label(self.login_frame, text="Email", font=("Helvetica", 12))
+        self.login_username_label.grid(row=1, column=0)
+        self.login_username = tk.Entry(self.login_frame, font=("Helvetica", 12))
+        self.login_username.grid(row=1, column=1)
 
-login_label = tk.Label(login_frame, text="Login", font=("Helvetica", 16))
-login_label.grid(row=0, column=0, columnspan=2)
+        self.login_password_label = tk.Label(self.login_frame, text="Password", font=("Helvetica", 12))
+        self.login_password_label.grid(row=2, column=0)
+        self.login_password = tk.Entry(self.login_frame, show="*", font=("Helvetica", 12))
+        self.login_password.grid(row=2, column=1)
 
-login_username_label = tk.Label(login_frame, text="Username", font=("Helvetica", 12))
-login_username_label.grid(row=1, column=0)
-login_username = tk.Entry(login_frame, font=("Helvetica", 12))
-login_username.grid(row=1, column=1)
+        self.login_button = tk.Button(self.login_frame, text="Login", command=self.login, font=("Helvetica", 12))
+        self.login_button.grid(row=3, column=0, pady=10)
 
-login_password_label = tk.Label(login_frame, text="Password", font=("Helvetica", 12))
-login_password_label.grid(row=2, column=0)
-login_password = tk.Entry(login_frame, show="*", font=("Helvetica", 12))
-login_password.grid(row=2, column=1)
+        self.register_button = tk.Button(self.login_frame, text="Register", command=self.register, font=("Helvetica", 12))
+        self.register_button.grid(row=3, column=1, pady=10)
 
-login_button = tk.Button(login_frame, text="Login", command=login, font=("Helvetica", 12))
-login_button.grid(row=3, column=0, pady=10)
+        self.status_label = tk.Label(self.root, text="", font=("Helvetica", 12))
+        self.status_label.pack()
 
-register_button = tk.Button(login_frame, text="Register", command=register, font=("Helvetica", 12))
-register_button.grid(row=3, column=1, pady=10)
+    def login(self):
+        username = self.login_username.get()
+        password = self.login_password.get()
+        dict = db.query_data(User.login(username))
+        if(len(dict)==0):
+            messagebox.showerror("Error", "No user named {}".format(username))
+            return
+        checkmessage = dict[0]
+        password_salt = checkmessage['salt'] + password
+        hashed_password = hashlib.md5(password_salt.encode()).hexdigest()
+        if(hashed_password==checkmessage['password']):
+            ##TODO open page, depend on user_type
 
-# Status Label
-status_label = tk.Label(root, text="", font=("Helvetica", 12))
-status_label.pack()
+            if(checkmessage['user_type']=='Operator'):
+                self.root.destroy()
+                opertor_view = Opertor(checkmessage['id'])
+                opertor_view.mainloop()
+            return
+        else:
+            messagebox.showerror("Error", "Wrong password")
+            return
 
-root.mainloop()
+    def register(self):
+        self.root.destroy()
+        register_page = Register()
+        register_page.run()
+
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    login_page = Login()
+    login_page.run()

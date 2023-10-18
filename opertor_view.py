@@ -137,7 +137,7 @@ class Opertor(tk.Tk):
         return scale
 
 
-    def report_lists(self, parent, user_name, comment, date, frame_index,order_id):  # this method is to show lots of small frame in a canvas
+    def report_lists(self, parent, user_name, comment, date, frame_index, order_id, report_id):  # this method is to show lots of small frame in a canvas
         frame = Frame(parent)                                               # You can copy it to other place you want
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
@@ -146,20 +146,23 @@ class Opertor(tk.Tk):
         label_user.place(x=5, y=10, width=100, height=30)
 
         text_comment = tk.Text(frame)
-        text_comment.place(x=100, y=10, width=300, height=30)
+        text_comment.place(x=100, y=10, width=250, height=30)
         text_comment.insert("1.0", comment)
         text_comment.config(state=DISABLED)  # 设置Text小部件为只读
         self.vbar(text_comment, 120, 10, 300, 30, frame)
 
-        label_date = Label(frame, text=date, anchor="center")
-        label_date.place(x=400, y=10, width=100, height=30)
+        date_part = date.split()[0]
+        label_date = Label(frame, text=date_part, anchor="center")
+        label_date.place(x=360, y=10, width=100, height=30)
 
-        button_deal = Button(frame, text="Check", takefocus=False, command=lambda id=order_id: self.open_detail_page(id))
+        button_deal = Button(frame, text="Check", takefocus=False, command=lambda id=order_id, report=report_id: self.open_detail_page(id,report))
         button_deal.place(x=500, y=10, width=50, height=30)
 
         return frame
 
     def bike_lists(self, parent, frame_index,bike_id, bike_type, city, battery,status):
+        user_id_dict = db.query_data(Bike.getUserByBikeId(bike_id))
+        user_id = user_id_dict[0]['is_use']
         frame = Frame(parent)
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
@@ -185,7 +188,7 @@ class Opertor(tk.Tk):
         button_fix = Button(frame, text="Fix", takefocus=False,command=lambda id=bike_id: self.fix(id, label_date))
         button_fix.place(x=425, y=10, width=60, height=30)
 
-        button_check = Button(frame, text="Detail", takefocus=False)
+        button_check = Button(frame, text="Detail", takefocus=False,command=lambda user=user_id,bike=bike_id:self.open_bike_page(user,bike))
         button_check.place(x=495, y=10, width=60, height=30)
 
         return frame
@@ -198,18 +201,10 @@ class Opertor(tk.Tk):
         self.now_type = 2
         self.tk_select_box_type['values'] = ("All", "Unfinished","Done")
 
-        # then show the report canvas,
-        # TODO this is test data, real one should be taken by DB
-        report_data = [
-            {"user_name": "User1", "comment": "Report 1 comment", "date": "06/09/2023","order_id": 1},
-            {"user_name": "User2", "comment": "Report 2 comment", "date": "06/10/2023","order_id": 2},
-            {"user_name": "User3", "comment": "Report 3 comment", "date": "06/10/2023","order_id": 3},
-            {"user_name": "User4", "comment": "Report 4 comment", "date": "06/10/2023","order_id": 4},
-            {"user_name": "User5", "comment": "Report 5 comment", "date": "06/10/2023","order_id": 5},
-            {"user_name": "User6", "comment": "Report 6 comment", "date": "06/10/2023","order_id": 6},
-            {"user_name": "User7", "comment": "Report 7 comment", "date": "06/10/2023","order_id": 7},
-        ]
-
+        if(self.filter=="All"):
+            report_data=db.query_data(Report.getAllReport())
+        else:
+            report_data = db.query_data(Report.getReportByStatus(self.filter))
 
         canvas_height = len(report_data) * 70
         for widget in self.tk_canvas_reports_container.winfo_children():
@@ -233,11 +228,12 @@ class Opertor(tk.Tk):
         for index, data in enumerate(report_data):
             self.report_lists(
                 frame,
-                data["user_name"],
-                data["comment"],
+                self.get_username(data['user_id']),
+                data["message"],
                 data["date"],
                 index,
-                data['order_id']
+                data['order_id'],
+                data['id']
             )                   # put your list inside the frame, NOT THE CANVAS!
 
     def show_map_page(self):
@@ -255,20 +251,12 @@ class Opertor(tk.Tk):
         self.now_type = 3
         self.tk_select_box_type['values'] = ("All", "Bike", "Car")
 
-        # TODO this is test data, real one should be taken by DB
-        deal_report_data = [
-            {"bike_id": 1,"city":"Glasgow","bike_type":"Bike","battery":95.5,"status":"Using"},
-            {"bike_id": 2, "city": "Glasgow", "bike_type":"Bike","battery": 15.5, "status": "Unused"},
-            {"bike_id": 3, "city": "Glasgow", "bike_type": "Car", "battery": 1.5, "status": "Broken"},
-            {"bike_id": 4, "city": "Glasgow", "bike_type": "Car", "battery": 52.8, "status": "Using"},
-            {"bike_id": 5, "city": "Glasgow", "bike_type": "Car", "battery": 100.0, "status": "Unused"},
-        ]
-        if(self.filter!="All"):
-            report_data = [item for item in deal_report_data if item["bike_type"] == self.filter]
+        if(self.filter=="All"):
+            deal_report_data=db.query_data(Bike.getAllBike())
         else:
-            report_data = deal_report_data## TODO: in fact this is sql's duty
+            deal_report_data = db.query_data(Bike.getBikeByTypes(self.filter))
 
-        canvas_height = len(report_data) * 70
+        canvas_height = len(deal_report_data) * 70
         for widget in self.tk_canvas_detailed.winfo_children():
             widget.destroy()
 
@@ -288,15 +276,15 @@ class Opertor(tk.Tk):
         self.tk_canvas_detailed.configure(yscrollcommand=vbar.set)
         vbar.configure(command=self.tk_canvas_detailed.yview)  # apply the vbar
 
-        for index, data in enumerate(report_data):
+        for index, data in enumerate(deal_report_data):
             self.bike_lists(
                 frame,
                 index,
-                data["bike_id"],
+                data["id"],
                 data["bike_type"],
                 data["city"],
                 data["battery"],
-                data["status"]
+                self.show_status_of_bike(data['is_use'],data['is_broken'])
             )  # put your list inside the frame, NOT THE CANVAS!
 
 
@@ -316,8 +304,9 @@ class Opertor(tk.Tk):
             if battery == 100:
                 messagebox.showinfo("Info", "Already full!")
             else:
-                battery_label.config(text="100.0%")  ##TODO NEED TO UPDATE THE SQL
-                messagebox.showinfo("Info", "Completed") ##TODO NEED TO UPDATE THE SQL
+                battery_label.config(text="100.0%")
+                db.insert_or_delete_data(Bike.changeBattery(bike_id))
+                messagebox.showinfo("Info", "Completed")
 
     def fix(self, bike_id, status_label):
         status = status_label["text"]
@@ -325,13 +314,19 @@ class Opertor(tk.Tk):
             messagebox.showinfo("Info", "Is been using now!")
         elif status == "Broken":
             messagebox.showinfo("Info", "Complete!")
-            status_label.config(text="Unused")  ##TODO NEED TO UPDATE THE SQL
+            db.insert_or_delete_data(Bike.fix(bike_id))
+            status_label.config(text="Unused")
         elif status == "Unused":
             messagebox.showinfo("Info", "It's OK now")
 
-    def open_detail_page(self, order_id):
+    def open_detail_page(self, order_id,report_id):
         from opertor_report_info import ReportPage
-        detail_page = ReportPage(order_id)
+        detail_page = ReportPage(order_id,report_id,self.user_id)
+        detail_page.mainloop()
+
+    def open_bike_page(self, user_id,bike_id):
+        from bike_info import BikePage
+        detail_page = BikePage(user_id,bike_id)
         detail_page.mainloop()
 
     def on_combobox_select(self, event):
@@ -351,6 +346,20 @@ class Opertor(tk.Tk):
                 self.filter = "Unfinished"
             elif selected_value == "Done":
                 self.filter = "Done"
+            self.show_reports_page()
+
+    def show_status_of_bike(self,is_use,is_broken):
+        if is_broken==1:
+            return "Broken"
+        else:
+            if is_use==-1:
+                return "Unused"
+            else:
+                return "Using"
+
+    def get_username(self,user_id):
+        user = db.query_data(User.getUserInfo(user_id))
+        return user[0]['user_name']
 
 class Opertor_view(Opertor):
     def __init__(self):
