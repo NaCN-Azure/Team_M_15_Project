@@ -4,6 +4,7 @@ from tkinter.ttk import *
 import db.db_config as db
 import db.Bike as Bike
 import db.Order as Order
+from PIL import Image, ImageTk
 import db.Report as Report
 import db.User as User
 
@@ -17,6 +18,11 @@ class Opertor(tk.Tk):
         self.title(self.get_title_name(user_id))
         self.filter = "All"
 
+        self.panning = False
+        self.last_x = 0
+        self.last_y = 0
+        self.bike_count = 0
+
         self.tk_frame_left = self.__tk_frame_left(self)
 
         self.tk_button_MainButton = self.__tk_button_MainButton(self.tk_frame_left)
@@ -29,8 +35,7 @@ class Opertor(tk.Tk):
         self.tk_input_search = self.__tk_input_search(self.tk_frame_right)
         self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
 
-        self.tk_frame_mapBox = self.__tk_frame_mapBox(self.tk_frame_right)
-        self.tk_scale_slide = self.__tk_scale_slide(self.tk_frame_mapBox)
+        self.tk_canvas_mapBox = self.__tk_canvas_mapBox(self.tk_frame_right)
 
         self.tk_canvas_reports_container = self.__tk_canvas_reports_container(self.tk_frame_right)
         self.tk_canvas_detailed = self.__tk_canvas_detailed(self.tk_frame_right)
@@ -113,11 +118,12 @@ class Opertor(tk.Tk):
         label = Label(parent, text="Search: ", anchor="center", )
         label.place(x=20, y=10, width=50, height=30)
         return label
-    def __tk_frame_mapBox(self, parent):
-        frame = Frame(parent)
-        frame.place(x=10, y=50, width=607, height=233) # this is the containor of map
-        self.configure_frame_border(frame)
-        return frame
+    def __tk_canvas_mapBox(self, parent):
+        canvas = tk.Canvas(parent)
+        canvas.place(x=10, y=50, width=607, height=233)
+        canvas.bind("<ButtonPress-1>", self.on_map_click)
+        canvas.bind("<B1-Motion>", self.on_map_drag)
+        return canvas
     def __tk_canvas_detailed(self,parent):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233)  # this is the containor of reports, IMPORTANT!! IT IS CANVAS!!
@@ -131,10 +137,6 @@ class Opertor(tk.Tk):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233) # this is the containor of reports, IMPORTANT!! IT IS CANVAS!!
         return canvas
-    def __tk_scale_slide(self, parent):
-        scale = Scale(parent,from_=1, to=4, orient="horizontal")
-        scale.place(relx=0.02, rely=0.95, anchor=tk.SW, width=150, height=30)
-        return scale
 
 
     def report_lists(self, parent, user_name, comment, date, frame_index, order_id, report_id):  # this method is to show lots of small frame in a canvas
@@ -161,8 +163,6 @@ class Opertor(tk.Tk):
         return frame
 
     def bike_lists(self, parent, frame_index,bike_id, bike_type, city, battery,status):
-        user_id_dict = db.query_data(Bike.getUserByBikeId(bike_id))
-        user_id = user_id_dict[0]['is_use']
         frame = Frame(parent)
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
@@ -188,14 +188,82 @@ class Opertor(tk.Tk):
         button_fix = Button(frame, text="Fix", takefocus=False,command=lambda id=bike_id: self.fix(id, label_date))
         button_fix.place(x=425, y=10, width=60, height=30)
 
-        button_check = Button(frame, text="Detail", takefocus=False,command=lambda user=user_id,bike=bike_id:self.open_bike_page(user,bike))
+        button_check = Button(frame, text="Detail", takefocus=False,command=lambda user=self.user_id,bike=bike_id:self.open_bike_page(user,bike))
         button_check.place(x=495, y=10, width=60, height=30)
 
         return frame
 
+# Map showing method is here!!!!!!!!
+    def show_map(self):
+        self.map_image = Image.open("map.jpg")  # Replace with your map image path
+        self.map_width, self.map_height = self.map_image.size
+        new_width = int(self.map_width)
+        new_height = int(self.map_height)
+        resized_image = self.map_image.resize((new_width, new_height))
+        self.photo = ImageTk.PhotoImage(resized_image)
+
+        # Clear the canvas and display the resized map
+        self.tk_canvas_mapBox.delete("all")
+        self.map_item = self.tk_canvas_mapBox.create_image(0, 0, image=self.photo, anchor="nw")
+
+        data = db.query_data(Bike.getAllBike())
+        for item in data:
+            x = item['X']
+            y = item['Y']
+            id = item['id']
+            color = Bike.getColorForBike(item['bike_type'])
+            self.add_marker(x, y, id,color)
+
+        # Bind click events for markers
+        self.bike_count= len(data)
+        for i in range(self.bike_count):
+            self.tk_canvas_mapBox.tag_bind('marker_%s' % i, '<ButtonPress-1>',
+                                 lambda evt, id=i: self.open_bike_page(self.user_id,id))
+    def on_map_click(self, event):
+        self.panning = True
+        self.last_x = event.x
+        self.last_y = event.y
+
+    def on_map_drag(self, event):
+        if self.panning:
+            dx = event.x - self.last_x
+            dy = event.y - self.last_y
+            self.last_x = event.x
+            self.last_y = event.y
+
+            # Calculate the current map position
+            current_x, current_y = self.tk_canvas_mapBox.coords(self.map_item)
+            new_x = current_x + dx
+            new_y = current_y + dy
+
+            # Calculate the boundaries
+            min_x = 607 - self.map_width
+            min_y = 233 - self.map_height
+
+            # Ensure the new position is within bounds
+            new_x = max(min_x, min(0, new_x))
+            new_y = max(min_y, min(0, new_y))
+
+            self.tk_canvas_mapBox.move(self.map_item, new_x - current_x, new_y - current_y)
+
+            # Update marker positions
+            for i in range(self.bike_count):
+                x1, y1, x2, y2 = self.tk_canvas_mapBox.coords('marker_%s' % i)
+                self.tk_canvas_mapBox.coords('marker_%s' % i, x1 + new_x - current_x, y1 + new_y - current_y,
+                                   x2 + new_x - current_x, y2 + new_y - current_y)
+    def add_marker(self, x, y, id,color):
+        self.tk_canvas_mapBox.coords('marker_%s' % id, x - 5, y - 5, x + 5, y + 5)
+        self.tk_canvas_mapBox.create_oval(x - 5, y - 5, x + 5, y + 5, fill=color, tag='marker_%s' % id)
+
+
+    # def show_marker(self, id):
+    #     tk.messagebox.showinfo(title='Marker %s' % id, message='Marker ID: %s' % id)
+
+## map method ends!!!!!!!!!!!!!!!1
+
     def show_reports_page(self):
         # disappear the map frame
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.tk_canvas_detailed.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 2
@@ -242,11 +310,12 @@ class Opertor(tk.Tk):
         self.tk_frame_info.place_forget()
         self.now_type = 1
 
-        self.tk_frame_mapBox.place(x=10, y=50, width=607, height=233)
+        self.tk_canvas_mapBox.place(x=10, y=50, width=607, height=233)
+        self.show_map()
 
     def show_detail_page(self):
         self.tk_canvas_reports_container.place_forget()
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 3
         self.tk_select_box_type['values'] = ("All", "Bike", "Car")
@@ -287,11 +356,10 @@ class Opertor(tk.Tk):
                 self.show_status_of_bike(data['is_use'],data['is_broken'])
             )  # put your list inside the frame, NOT THE CANVAS!
 
-
     def show_info_page(self):
         self.tk_canvas_reports_container.place_forget()
         self.tk_canvas_detailed.place_forget()
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.now_type = 4
 
         self.tk_frame_info.place(x=10, y=50, width=607, height=233)

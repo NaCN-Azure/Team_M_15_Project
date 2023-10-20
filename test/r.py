@@ -9,7 +9,7 @@ class MapApp:
         self.root.title("Interactive Map")
 
         # Load the map image
-        self.map_image = Image.open("e.png")
+        self.map_image = Image.open("..\map.jpg")
         self.map_width, self.map_height = self.map_image.size
 
         # Create a canvas to display the map
@@ -32,12 +32,10 @@ class MapApp:
         self.last_x = 0
         self.last_y = 0
 
-    def add_marker(self, x, y, id):
+    def add_marker(self, x, y, id,color):
         # 将红点坐标调整到地图的缩放和平移中
-        x /= self.zoom_level
-        y /= self.zoom_level
         self.canvas.coords('marker_%s' % id, x - 5, y - 5, x + 5, y + 5)
-        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill='red', tag='marker_%s' % id)
+        self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill=color, tag='marker_%s' % id)
 
     def show_marker_id(self, id):
         tk.messagebox.showinfo(title='Marker %s' % id, message='Marker ID: %s' % id)
@@ -61,7 +59,7 @@ class MapApp:
         for i in range(10):
             x = random.randint(0, new_width)
             y = random.randint(0, new_height)
-            self.add_marker(x, y, i)
+            self.add_marker(x, y, i,'red')
 
         # 为每个小红点绑定点击事件
         for i in range(10):

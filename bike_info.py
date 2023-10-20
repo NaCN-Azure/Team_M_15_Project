@@ -27,7 +27,6 @@ class BikePage(Tk):
         self.tk_text_min = self.__tk_text_min(self.tk_frame_frame_left)
         self.tk_frame_frame_right = self.__tk_frame_frame_right(self)
         self.tk_canvas_map = self.__tk_canvas_map(self.tk_frame_frame_right)
-        self.tk_label_location = self.__tk_label_location(self.tk_frame_frame_right)
         self.tk_frame_button_different = self.__tk_frame_button_different(self)
 
     def __win(self):
@@ -135,12 +134,6 @@ class BikePage(Tk):
         canvas = Canvas(parent)
         canvas.place(x=12, y=10, width=199, height=195)
         return canvas
-
-    def __tk_label_location(self, parent):
-        location = "longitude: {}, latitude: {}".format(self.bike_dict[0]['longitude'],self.bike_dict[0]['latitude'])
-        label = Label(parent, text=location, anchor="center", )
-        label.place(x=10, y=214, width=200, height=38)
-        return label
 
     def __tk_frame_button_different(self, parent):
         frame = Frame(parent, )

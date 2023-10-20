@@ -24,3 +24,7 @@ def changeBattery(id):
 
 def getBikeByTypes(bike_type):
     return 'select * from bike where bike_type = \'{}\''.format(bike_type)
+
+def getColorForBike(type):
+    dict = {'Bike':'red','Car':'blue'}
+    return dict[type]
