@@ -195,7 +195,6 @@ class Opertor(tk.Tk):
 
 # Map showing method is here!!!!!!!!
     def show_map(self):
-
         self.map_image = Image.open("map.jpg")  # Replace with your map image path
         self.map_width, self.map_height = self.map_image.size
         new_width = int(self.map_width)
@@ -204,21 +203,26 @@ class Opertor(tk.Tk):
         self.photo = ImageTk.PhotoImage(resized_image)
         # Clear the canvas and display the resized map
         self.tk_canvas_mapBox.delete("all")
-        self.map_item = self.tk_canvas_mapBox.create_image(0, 0, image=self.photo, anchor="nw") #TODO I will do with pos
-        self.tk_canvas_mapBox.bind("<ButtonPress-1>", self.on_map_click)
-        self.tk_canvas_mapBox.bind("<B1-Motion>", self.on_map_drag)
+        self.map_item = self.tk_canvas_mapBox.create_image(self.default_map_x, self.default_map_y, image=self.photo, anchor="nw") #TODO I will do with pos
 
-        data = db.query_data(Bike.getAllBike())
+        ids=[]
+        if(self.filter=="All"):
+            data = db.query_data(Bike.getAllBike())
+        else:
+            data = db.query_data(Bike.getBikeByTypes(self.filter))
         for item in data:
-            x = item['X']
-            y = item['Y']
+            x = item['X']+self.default_map_x
+            y = item['Y']+self.default_map_y
             id = item['id']
+            ids.append(id)
             color = Bike.getColorForBike(item['bike_type'])
             self.add_marker(x, y, id,color)
-
+        self.tk_canvas_mapBox.bind("<ButtonPress-1>", self.on_map_click)
+        # id_list is used in the lambda function below,this red line may due to edit's error, does't matter
+        self.tk_canvas_mapBox.bind("<B1-Motion>", lambda event, id_list=ids: self.on_map_drag(event, id_list))
         # Bind click events for markers
         self.bike_count= len(data)
-        for i in range(self.bike_count):
+        for i in ids:
             self.tk_canvas_mapBox.tag_bind('marker_%s' % i, '<ButtonPress-1>',
                                  lambda evt, id=i: self.open_bike_page(self.user_id,id))
     def on_map_click(self, event):
@@ -226,7 +230,7 @@ class Opertor(tk.Tk):
         self.last_x = event.x
         self.last_y = event.y
 
-    def on_map_drag(self, event):
+    def on_map_drag(self, event,id_list):
         if self.panning:
             dx = event.x - self.last_x
             dy = event.y - self.last_y
@@ -251,14 +255,14 @@ class Opertor(tk.Tk):
             self.tk_canvas_mapBox.move(self.map_item, new_x - current_x, new_y - current_y)
 
             # Update marker positions
-            for i in range(1,self.bike_count+1):
+            for i in id_list:
                 x1, y1, x2, y2 = self.tk_canvas_mapBox.coords('marker_%s' % i) ##TODO
 
                 self.tk_canvas_mapBox.coords('marker_%s' % i, x1 + new_x - current_x, y1 + new_y - current_y,
                                    x2 + new_x - current_x, y2 + new_y - current_y)
 
     def add_marker(self, x, y, id, color):
-        # 将红点坐标调整到地图的缩放和平移中
+        # red
         self.tk_canvas_mapBox.coords('marker_%s' % id, x - 5, y - 5, x + 5, y + 5)
         self.tk_canvas_mapBox.create_oval(x - 5, y - 5, x + 5, y + 5, fill=color, tag='marker_%s' % id)
 
@@ -312,7 +316,9 @@ class Opertor(tk.Tk):
         self.tk_canvas_detailed.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 1
-
+        self.tk_select_box_type['values'] = ("All", "Bike", "Car")
+        for widget in self.tk_canvas_detailed.winfo_children():
+            widget.destroy()
         self.tk_canvas_mapBox.place(x=10, y=50, width=607, height=233)
         self.show_map()
 
@@ -402,14 +408,17 @@ class Opertor(tk.Tk):
 
     def on_combobox_select(self, event):
         selected_value = self.tk_select_box_type.get()
-        if(self.now_type==3):
+        if(self.now_type==3 or self.now_type==1):
             if selected_value == "All":
                 self.filter = "All"
             elif selected_value == "Bike":
                 self.filter = "Bike"
             elif selected_value == "Car":
                 self.filter = "Car"
-            self.show_detail_page()
+            if(self.now_type==3):
+                self.show_detail_page()
+            elif(self.now_type==1):
+                self.show_map_page()
         elif(self.now_type==2):
             if selected_value == "All":
                 self.filter = "All"

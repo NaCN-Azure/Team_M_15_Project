@@ -7,17 +7,26 @@ def getUserInfo(id):
 def addMoney(id,money):
     return 'update user set wallet = wallet + {} where id = {}'.format(money,id)
 
+def subMoney(id,money):
+    return 'update user set wallet = wallet - {} where id = {}'.format(money,id)
+
 def getSingleLabel(label,condition,value):
     return 'select {} from user where {} = \'{}\''.format(label,condition,value)
 
 def getAllUser():
-    return 'select * from user where user_type = 1'
-
-def getAllManager():
-    return 'select * from user where user_type = 3'
+    return 'select * from user where user_type = User'
 
 def getAllOpertor():
-    return 'select * from user where user_type = 2'
+    return 'select * from user where user_type = Operator'
+
+def getAllManager():
+    return 'select * from user where user_type = Manager'
+
+def getRoleOfTheUserByUsername(username):
+    return 'select user_type from user where user_name = {}'.format(username)
+
+def getRoleOfTheUserByID(id):
+    return 'select user_type from user where id = {}'.format(id)
 
 def updateUserInfo(user):
     return 'update user ' \

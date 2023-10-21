@@ -12,12 +12,12 @@ def updateLocation(id,longitude,latitude):
     return 'update bike set longtitue = {} and latitude = {} where id = {}'.format(longitude,latitude, id)
 def getAllBike():
     return 'select * from bike'
-def selectNearestBike(longitude,latitude,bike_type):
-    # TODO
-    return
 
 def fix(id):
     return 'update bike set is_broken = 0 where id = {}'.format(id)
+
+def broken(id):
+    return 'update bike set is_broken = 1 where id = {}'.format(id)
 
 def changeBattery(id):
     return 'update bike set battery = 100 where id = {}'.format(id)
@@ -28,3 +28,15 @@ def getBikeByTypes(bike_type):
 def getColorForBike(type):
     dict = {'Bike':'red','Car':'blue'}
     return dict[type]
+
+def findIsUse(user_id):
+    return 'select * from bike where is_use = {}'.format(user_id)
+
+def ownBike(user_id,id):
+    return 'update bike set is_use = {} where id = {}'.format(user_id,id)
+def returnBike(id):
+    return 'update bike set is_use = -1 where id = {}'.format(id)
+def lowBattery(id,battery):
+    return 'update bike set battery = {} where id = {}'.format(battery,id)
+def changelocation(id,X,Y):
+    return 'update bike set X = {}, Y = {} where id = {}'.format(X,Y,id)

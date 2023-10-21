@@ -1,11 +1,14 @@
-
+from datetime import datetime
 from tkinter import *
 from tkinter.ttk import *
+from tkinter import simpledialog,messagebox
+from PIL import Image, ImageTk
 import db.db_config as db
 import db.Bike as Bike
 import db.Order as Order
 import db.Report as Report
 import db.User as User
+
 class BikePage(Tk):
     def __init__(self,open_user_id,bike_id):
         super().__init__()
@@ -26,12 +29,11 @@ class BikePage(Tk):
         self.tk_label_min = self.__tk_label_min(self.tk_frame_frame_left)
         self.tk_text_min = self.__tk_text_min(self.tk_frame_frame_left)
         self.tk_frame_frame_right = self.__tk_frame_frame_right(self)
-        self.tk_canvas_map = self.__tk_canvas_map(self.tk_frame_frame_right)
         self.tk_frame_button_different = self.__tk_frame_button_different(self)
 
     def __win(self):
         # 设置窗口大小、居中
-        width = 484
+        width = 240
         height = 289
         screenwidth = self.winfo_screenwidth()
         screenheight = self.winfo_screenheight()
@@ -99,12 +101,14 @@ class BikePage(Tk):
         text = Text(parent)
         text.insert("1.0",self.bike_dict[0]['bike_type'])
         text.place(x=78, y=10, width=136, height=31)
+        text.config(state=DISABLED)  # 设置Text小部件为只读
         return text
 
     def __tk_text_status_box(self, parent):
         text = Text(parent)
         status = self.show_status_of_bike(self.bike_dict[0]['is_use'],self.bike_dict[0]['is_broken'])
         text.insert("1.0", status)
+        text.config(state=DISABLED)  # 设置Text小部件为只读
         text.place(x=79, y=60, width=135, height=31)
         return text
 
@@ -112,6 +116,7 @@ class BikePage(Tk):
         text = Text(parent)
         text.insert("1.0", str(self.bike_dict[0]['battery'])+"%")
         text.place(x=79, y=110, width=135, height=31)
+        text.config(state=DISABLED)  # 设置Text小部件为只读
         return text
 
     def __tk_label_min(self, parent):
@@ -123,17 +128,13 @@ class BikePage(Tk):
         text = Text(parent)
         text.insert("1.0", self.bike_dict[0]['total_minutes'])
         text.place(x=77, y=158, width=135, height=31)
+        text.config(state=DISABLED)  # 设置Text小部件为只读
         return text
 
     def __tk_frame_frame_right(self, parent):
         frame = Frame(parent, )
         frame.place(x=250, y=10, width=220, height=268)
         return frame
-
-    def __tk_canvas_map(self, parent):
-        canvas = Canvas(parent)
-        canvas.place(x=12, y=10, width=199, height=195)
-        return canvas
 
     def __tk_frame_button_different(self, parent):
         frame = Frame(parent, )
@@ -175,28 +176,111 @@ class BikePage(Tk):
                 return "Used By "+user[0]['user_name']
 
     def rent_bike(self):
-        # rent logic(User)
-        pass
+        if(len(db.query_data(Bike.findIsUse(self.open_user_id)))!=0):
+            messagebox.showerror("Error", "You can only rent one bike at the same time")
+            self.destroy()
+            return
+        else:
+            if(self.bike_dict[0]['is_broken']==1):
+                messagebox.showerror("Error", "It is broken")
+                self.destroy()
+                return
+            elif(self.bike_dict[0]['is_use']!=-1):
+                messagebox.showerror("Error", "Someone has already used it")
+                self.destroy()
+                return
+            elif (self.bike_dict[0]['battery'] <= 10):
+                messagebox.showerror("Error", "Low Battery")
+                self.destroy()
+                return
+            elif (self.user[0]['wallet'] <= 0):
+                messagebox.showerror("Error", "Your account doesn't have enough money")
+                self.destroy()
+                return
+            from_X = self.bike_dict[0]['X']
+            from_Y = self.bike_dict[0]['Y']
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            db.insert_or_delete_data(Order.startOrder(self.open_user_id,self.bike_id,current_time,from_X,from_Y))
+            db.insert_or_delete_data(Bike.ownBike(self.open_user_id,self.bike_id))
+            messagebox.showinfo("Info", "You have started your order at "+current_time)
+            self.destroy()
 
     def return_bike(self):
-        # return logic(User)
-        pass
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        to_X = 40
+        to_Y = 100 ##TODO
+        print(Order.getUnfinishedOrder(self.open_user_id))
+        order = db.query_data(Order.getUnfinishedOrder(self.open_user_id))
+        start_time = order[0]['start_date']
+        cost = self.count_fee(start_time,current_time)
+        x = self.count_battery(start_time,current_time)  ##TODO
+        db.insert_or_delete_data(Order.endOrder(order[0]['id'],current_time,to_X,to_Y,cost))
+        db.insert_or_delete_data(Bike.returnBike(self.bike_id))
+        db.insert_or_delete_data(Bike.lowBattery(self.bike_id,self.bike_dict[0]['battery']-x))
+        db.insert_or_delete_data(User.subMoney(self.open_user_id,cost))
+        db.insert_or_delete_data(Bike.changelocation(self.bike_id,to_X,to_Y))
+        messagebox.showinfo("Info", "You have end your order at "+current_time)
+        from userPage import Userpage
+        u = Userpage(self.open_user_id)
+        u.get_money()
+        self.destroy()
 
     def cancel_bike(self):
-        # cancel (User)
-        pass
+        self.destroy()
+
+    def count_fee(self,start_time,end_time):
+        start_datetime = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+        end_datetime = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+        time_difference = end_datetime - start_datetime
+        total_minutes = time_difference.total_seconds() / 60
+        total_half_hours = total_minutes / 30
+        type = self.bike_dict[0]['bike_type']
+        rate = 1
+        if(type=="Bike"):
+            rate=1
+        elif(type=="Car"):
+            rate=5
+        fee = int(total_half_hours) + rate
+        return fee
+    def count_battery(self,start_time,end_time):
+        return 0 ##TODO
 
     def charge_bike(self):
-        # charge (Operator)
-        pass
+        battery_text = self.tk_text_battery_box.get("1.0","end-1c")
+        battery = float(battery_text[:-1])
+        status = self.tk_text_status_box.get("1.0","end-1c")
+        if status == "Using":
+            messagebox.showinfo("Info", "Is been using now!")
+        else:
+            if battery == 100:
+                messagebox.showinfo("Info", "Already full!")
+            else:
+                self.tk_text_battery_box.delete("1.0", "end")
+                self.tk_text_battery_box.insert("1.0", "100%")
+                db.insert_or_delete_data(Bike.changeBattery(self.bike_id))
+                messagebox.showinfo("Info", "Completed")
 
     def fix_bike(self):
-        # fix (Operator)
-        pass
+        status = self.tk_text_status_box.get("1.0","end-1c")
+        if status == "Using":
+            messagebox.showinfo("Info", "Is been using now!")
+        elif status == "Broken":
+            messagebox.showinfo("Info", "Complete!")
+            db.insert_or_delete_data(Bike.fix(self.bike_id))
+            self.tk_text_status_box.delete("1.0", "end")
+            self.tk_text_status_box.insert("1.0", "Unused")
+        elif status == "Unused":
+            messagebox.showinfo("Info", "It's OK now")
 
     def move_bike(self):
-        # move (Operator)
-        pass
+        status = self.tk_label_status['text']
+        if status == "Using":
+            messagebox.showinfo("Info", "Is been using now!")
+        else:
+            new_x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
+            new_y = simpledialog.askinteger("Enter New Y", "Enter the new Y coordinate:")
+            db.insert_or_delete_data(Bike.changelocation(self.bike_id,new_x,new_y))
+            messagebox.showinfo("Info", "Completely Moved!")
 
     def add_same_bike(self):
         # add numerous new bikes with same type (Manager)
@@ -215,5 +299,6 @@ class Win(BikePage):
 
 
 if __name__ == "__main__":
-    win = BikePage(1,1)
+    win = BikePage(1,2)
     win.mainloop()
+    # print(win.count_fee('2021/03/12 12:00:00','2021/03/12 12:01:00'))

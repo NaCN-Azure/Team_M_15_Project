@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH, DISABLED, messagebox
+from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH, DISABLED, messagebox,simpledialog
 from tkinter.ttk import *
 import db.db_config as db
 import db.Bike as Bike
 import db.Order as Order
+from PIL import Image, ImageTk
 import db.Report as Report
 import db.User as User
 
@@ -14,8 +15,15 @@ class Userpage(tk.Tk):
 
         self.user_id = user_id
         self.now_type = 1
-        self.title(self.get_title_name(user_id))
+        self.title(self.get_title_name())
         self.filter = "All"
+
+        self.panning = False
+        self.default_map_x = 0
+        self.default_map_y = 0
+        self.last_x = 0
+        self.last_y = 0
+        self.bike_count = 0
 
         self.tk_frame_left = self.__tk_frame_left(self)
 
@@ -26,19 +34,30 @@ class Userpage(tk.Tk):
 
         self.tk_frame_right = self.__tk_frame_right(self)
         self.tk_select_box_type = self.__tk_select_box_type(self.tk_frame_right)
-        self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
 
-        self.tk_frame_mapBox = self.__tk_frame_mapBox(self.tk_frame_right)
-        self.tk_scale_slide = self.__tk_scale_slide(self.tk_frame_mapBox)
+        self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
+        self.tk_label_wallet = self.__tk_label_wallet(self.tk_frame_right)
+        self.tl_button_money = self.__tk_button_money(self.tk_frame_right)
+
+        self.tk_canvas_mapBox = self.__tk_canvas_mapBox(self.tk_frame_right)
 
         self.tk_canvas_reports_container = self.__tk_canvas_reports_container(self.tk_frame_right)
         self.tk_canvas_detailed = self.__tk_canvas_detailed(self.tk_frame_right)
         self.tk_frame_info = self.__tk_frame_info(self.tk_frame_right)
         self.show_map_page()  # default showing map pages
 
-    def get_title_name(self,user_id):
+    def get_title_name(self):
         operator_info = db.query_data(User.getUserInfo(self.user_id))
         return "User: " + operator_info[0]['user_name']
+    def get_money(self):
+        user = db.query_data(User.getUserInfo(self.user_id))
+        return user[0]['wallet']
+    def add_money(self):
+        x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
+        now = float(self.tk_label_wallet['text'])
+        self.tk_label_wallet.configure(text=x+now)
+        db.insert_or_delete_data(User.addMoney(self.user_id,x))
+        return
 
     def __win(self):
         width = 783
@@ -64,7 +83,7 @@ class Userpage(tk.Tk):
         widget.bind("<Leave>", lambda e: self.__scrollbar_hide(bar,widget))
         bar.bind("<Leave>", lambda e: self.__scrollbar_hide(bar,widget))
     def vbar(self,ele, x, y, w, h, parent):
-        sw = 15 # Scrollbar 宽度
+        sw = 15
         x = x + w - sw
         vbar = Scrollbar(parent)
         ele.configure(yscrollcommand=vbar.set)
@@ -105,14 +124,23 @@ class Userpage(tk.Tk):
         cb.bind("<<ComboboxSelected>>", self.on_combobox_select)
         return cb
     def __tk_label_icon(self, parent):
-        label = Label(parent, text="Map", anchor="center", )
-        label.place(x=20, y=10, width=50, height=30)
+        label = Label(parent, text="Your wallet:", anchor="center", )
+        label.place(x=20, y=10, width=100, height=30)
         return label
-    def __tk_frame_mapBox(self, parent):
-        frame = Frame(parent)
-        frame.place(x=10, y=50, width=607, height=233) # this is the containor of map
-        self.configure_frame_border(frame)
-        return frame
+
+    def __tk_label_wallet(self,parent):
+        label = Label(parent, text=self.get_money(), anchor="center", )
+        label.place(x=120, y=10, width=100, height=30)
+        return label
+    def __tk_button_money(self,parent):
+        btn = Button(parent, text="Add", takefocus=False, command=self.add_money)
+        btn.place(x=250, y=10, width=50, height=30)
+        return btn
+
+    def __tk_canvas_mapBox(self, parent):
+        canvas = tk.Canvas(parent)
+        canvas.place(x=10, y=50, width=607, height=233)
+        return canvas
     def __tk_canvas_detailed(self,parent):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233)  # this is the containor of reports, IMPORTANT!! IT IS CANVAS!!
@@ -126,10 +154,82 @@ class Userpage(tk.Tk):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233) # this is the containor of reports, IMPORTANT!! IT IS CANVAS!!
         return canvas
-    def __tk_scale_slide(self, parent):
-        scale = Scale(parent,from_=1, to=4, orient="horizontal")
-        scale.place(relx=0.02, rely=0.95, anchor=tk.SW, width=150, height=30)
-        return scale
+
+    def show_map(self):
+        self.map_image = Image.open("map.jpg")  # Replace with your map image path
+        self.map_width, self.map_height = self.map_image.size
+        new_width = int(self.map_width)
+        new_height = int(self.map_height)
+        resized_image = self.map_image.resize((new_width, new_height))
+        self.photo = ImageTk.PhotoImage(resized_image)
+        # Clear the canvas and display the resized map
+        self.tk_canvas_mapBox.delete("all")
+        self.map_item = self.tk_canvas_mapBox.create_image(self.default_map_x, self.default_map_y, image=self.photo,
+                                                           anchor="nw")  # TODO I will do with pos
+
+        ids = []
+        if (self.filter == "All"):
+            data = db.query_data(Bike.getAllBike())
+        else:
+            data = db.query_data(Bike.getBikeByTypes(self.filter))
+        for item in data:
+            x = item['X'] + self.default_map_x
+            y = item['Y'] + self.default_map_y
+            id = item['id']
+            ids.append(id)
+            color = Bike.getColorForBike(item['bike_type'])
+            if(item['is_use'])==self.user_id:
+                color='green'
+            self.add_marker(x, y, id, color)
+        self.tk_canvas_mapBox.bind("<ButtonPress-1>", self.on_map_click)
+        # id_list is used in the lambda function below,this red line may due to edit's error, does't matter
+        self.tk_canvas_mapBox.bind("<B1-Motion>", lambda event, id_list=ids: self.on_map_drag(event, id_list))
+        # Bind click events for markers
+        self.bike_count = len(data)
+        for i in ids:
+            self.tk_canvas_mapBox.tag_bind('marker_%s' % i, '<ButtonPress-1>',
+                                           lambda evt, id=i: self.open_bike_page(self.user_id, id))
+
+    def on_map_click(self, event):
+        self.panning = True
+        self.last_x = event.x
+        self.last_y = event.y
+
+    def on_map_drag(self, event, id_list):
+        if self.panning:
+            dx = event.x - self.last_x
+            dy = event.y - self.last_y
+            self.last_x = event.x
+            self.last_y = event.y
+
+            # Calculate the current map position
+            current_x, current_y = self.tk_canvas_mapBox.coords(self.map_item)
+            new_x = current_x + dx
+            new_y = current_y + dy
+            self.default_map_x = new_x
+            self.default_map_y = new_y
+
+            # Calculate the boundaries
+            min_x = 607 - self.map_width
+            min_y = 233 - self.map_height
+
+            # Ensure the new position is within bounds
+            new_x = max(min_x, min(0, new_x))
+            new_y = max(min_y, min(0, new_y))
+
+            self.tk_canvas_mapBox.move(self.map_item, new_x - current_x, new_y - current_y)
+
+            # Update marker positions
+            for i in id_list:
+                x1, y1, x2, y2 = self.tk_canvas_mapBox.coords('marker_%s' % i)  ##TODO
+
+                self.tk_canvas_mapBox.coords('marker_%s' % i, x1 + new_x - current_x, y1 + new_y - current_y,
+                                             x2 + new_x - current_x, y2 + new_y - current_y)
+
+    def add_marker(self, x, y, id, color):
+        # red
+        self.tk_canvas_mapBox.coords('marker_%s' % id, x - 5, y - 5, x + 5, y + 5)
+        self.tk_canvas_mapBox.create_oval(x - 5, y - 5, x + 5, y + 5, fill=color, tag='marker_%s' % id)
 
 
     def report_lists(self, parent, user_name, comment, date, frame_index,order_id):  # this method is to show lots of small frame in a canvas
@@ -141,20 +241,21 @@ class Userpage(tk.Tk):
         label_user.place(x=5, y=10, width=100, height=30)
 
         text_comment = tk.Text(frame)
-        text_comment.place(x=100, y=10, width=300, height=30)
+        text_comment.place(x=100, y=10, width=200, height=30)
         text_comment.insert("1.0", comment)
-        text_comment.config(state=DISABLED)  # 设置Text小部件为只读
-        self.vbar(text_comment, 120, 10, 300, 30, frame)
+        text_comment.config(state=DISABLED)
+        self.vbar(text_comment, 120, 10, 200, 30, frame)
 
-        label_date = Label(frame, text=date, anchor="center")
-        label_date.place(x=400, y=10, width=100, height=30)
+        date_part = date.split()[0]
+        label_date = Label(frame, text=date_part, anchor="center")
+        label_date.place(x=300, y=10, width=100, height=30)
 
-        button_deal = Button(frame, text="Check", takefocus=False, command=lambda id=order_id: self.open_detail_page(id))
-        button_deal.place(x=500, y=10, width=50, height=30)
+        label_order = Label(frame, text="Order Id: "+str(order_id), anchor="center")
+        label_order.place(x=400, y=10, width=100, height=30)
 
         return frame
 
-    def bike_lists(self, parent, frame_index,id, bike_id, start_date, end_date, cost):
+    def bike_lists(self, parent, frame_index,id, bike_id, start_date, end_date, cost,order_id):
         frame = Frame(parent)
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
@@ -165,48 +266,38 @@ class Userpage(tk.Tk):
         label_type = Label(frame, text=bike_id, anchor="center")
         label_type.place(x=35, y=10, width=70, height=30)
 
-        label_city = Label(frame, text=start_date, anchor="center")
-        label_city.place(x=110, y=10, width=80, height=30)
+        start_date_part = start_date.split()[0]
+        label_city = Label(frame, text=start_date_part, anchor="center")
+        label_city.place(x=110, y=10, width=70, height=30)
 
-        label_battery = Label(frame, text=end_date, anchor="center")
-        label_battery.place(x=230, y=10, width=80, height=30)
+        if(end_date!=None):
+            end_date_part = end_date.split()[0]
+        else:
+            end_date_part = None
+        label_battery = Label(frame, text=end_date_part, anchor="center")
+        label_battery.place(x=220, y=10, width=70, height=30)
 
         label_date = Label(frame, text=cost, anchor="center")
-        label_date.place(x=310, y=10, width=100, height=30)
+        label_date.place(x=290, y=10, width=100, height=30)
 
-        # button_check = Button(frame, text="Detail", takefocus=False)
-        # button_check.place(x=495, y=10, width=60, height=30)
+        if(order_id!=-1 and end_date!=None):
+            button_deal = Button(frame, text="Report", takefocus=False, command=lambda order=order_id, bike=bike_id: self.report_question(order_id,bike_id))
+            button_deal.place(x=400, y=10, width=50, height=30)
 
         return frame
 
     def show_reports_page(self):
         # disappear the map frame
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.tk_canvas_detailed.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 2
         self.tk_select_box_type['values'] = ("All", "Unfinished","Done")
 
-        # then show the report canvas,
-        # TODO this is test data, real one should be taken by DB
-        report_data = db.query_data(Report.getReportByUserId(self.user_id))
-        user_name = db.query_data(User.getUserInfo(self.user_id))[0]['user_name']
-        print("Displaying reports for User " + user_name + " with ID: " + str(self.user_id))
-
-        for report in report_data:
-            report['user_name'] = user_name
-            report['comment'] = report_data[0]['message']
-
-        # report_data = [
-        #     {"user_name": "User1", "comment": "Report 1 comment", "date": "06/09/2023","order_id": 1},
-        #     {"user_name": "User2", "comment": "Report 2 comment", "date": "06/10/2023","order_id": 2},
-        #     {"user_name": "User3", "comment": "Report 3 comment", "date": "06/10/2023","order_id": 3},
-        #     {"user_name": "User4", "comment": "Report 4 comment", "date": "06/10/2023","order_id": 4},
-        #     {"user_name": "User5", "comment": "Report 5 comment", "date": "06/10/2023","order_id": 5},
-        #     {"user_name": "User6", "comment": "Report 6 comment", "date": "06/10/2023","order_id": 6},
-        #     {"user_name": "User7", "comment": "Report 7 comment", "date": "06/10/2023","order_id": 7},
-        # ]
-
+        if(self.filter=="All"):
+            report_data = db.query_data(Report.getReportByUserId(self.user_id))
+        else:
+            report_data = db.query_data(Report.getReportByStatusAndUserId(self.filter,self.user_id))
 
         canvas_height = len(report_data) * 70
         for widget in self.tk_canvas_reports_container.winfo_children():
@@ -230,8 +321,8 @@ class Userpage(tk.Tk):
         for index, data in enumerate(report_data):
             self.report_lists(
                 frame,
-                data["user_name"],
-                data["comment"],
+                data["problem_type"],
+                data["message"],
                 data["date"],
                 index,
                 data['order_id']
@@ -242,31 +333,21 @@ class Userpage(tk.Tk):
         self.tk_canvas_detailed.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 1
+        self.tk_select_box_type['values'] = ("All", "Bike", "Car")
 
-        self.tk_frame_mapBox.place(x=10, y=50, width=607, height=233)
+        self.tk_canvas_mapBox.place(x=10, y=50, width=607, height=233)
+        self.show_map()
 
     def show_orders_page(self):
         self.tk_canvas_reports_container.place_forget()
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 3
-        self.tk_select_box_type['values'] = ("All", "Bike", "Car")
+        self.tk_select_box_type['values'] = ("All")
 
-        deal_report_data = db.query_data(Order.getUserOrder(self.user_id))
-        print(deal_report_data)
-        # deal_report_data = [
-        #     {"bike_id": 1,"city":"Glasgow","bike_type":"Bike","battery":95.5,"status":"Using"},
-        #     {"bike_id": 2, "city": "Glasgow", "bike_type":"Bike","battery": 15.5, "status": "Unused"},
-        #     {"bike_id": 3, "city": "Glasgow", "bike_type": "Car", "battery": 1.5, "status": "Broken"},
-        #     {"bike_id": 4, "city": "Glasgow", "bike_type": "Car", "battery": 52.8, "status": "Using"},
-        #     {"bike_id": 5, "city": "Glasgow", "bike_type": "Car", "battery": 100.0, "status": "Unused"},
-        # ]
-        if(self.filter!="All"):
-            report_data = [item for item in deal_report_data if item["bike_type"] == self.filter]
-        else:
-            report_data = deal_report_data## TODO: in fact this is sql's duty
+        report_data = db.query_data(Order.getUserOrder(self.user_id))
 
-        canvas_height = len(report_data) * 70
+        canvas_height = (len(report_data)+1) * 70
         for widget in self.tk_canvas_detailed.winfo_children():
             widget.destroy()
 
@@ -293,11 +374,11 @@ class Userpage(tk.Tk):
                 "Bike ID",
                 "Start date",
                 "End Date",
-                "Cost"
+                "Cost",
+                -1
             )
 
         for index, data in enumerate(report_data):
-            print(index)
             self.bike_lists(
                 frame,
                 index+1,
@@ -305,33 +386,41 @@ class Userpage(tk.Tk):
                 data["bike_id"],
                 data["start_date"],
                 data["end_date"],
-                data["cost"]
+                data["cost"],
+                data["id"]
             )  # put your list inside the frame, NOT THE CANVAS!
-
 
     def show_info_page(self):
         self.tk_canvas_reports_container.place_forget()
         self.tk_canvas_detailed.place_forget()
-        self.tk_frame_mapBox.place_forget()
+        self.tk_canvas_mapBox.place_forget()
         self.now_type = 4
 
         self.tk_frame_info.place(x=10, y=50, width=607, height=233)
 
-    def open_detail_page(self, order_id):
-        from opertor_report_info import ReportPage
-        detail_page = ReportPage(order_id)
+    def open_bike_page(self, user_id,bike_id):
+        from bike_info import BikePage
+        detail_page = BikePage(user_id,bike_id)
         detail_page.mainloop()
+
+    def report_question(self,order, bike):
+        from user_report_info import NewReport
+        newReport = NewReport(self.user_id,order,bike)
+        newReport.mainloop()
 
     def on_combobox_select(self, event):
         selected_value = self.tk_select_box_type.get()
-        if(self.now_type==3):
+        if(self.now_type==3 or self.now_type==1):
             if selected_value == "All":
                 self.filter = "All"
             elif selected_value == "Bike":
                 self.filter = "Bike"
             elif selected_value == "Car":
                 self.filter = "Car"
-            self.show_orders_page()
+            if(self.now_type==3):
+                self.show_orders_page()
+            elif(self.now_type==1):
+                self.show_map_page()
         elif(self.now_type==2):
             if selected_value == "All":
                 self.filter = "All"
@@ -339,6 +428,7 @@ class Userpage(tk.Tk):
                 self.filter = "Unfinished"
             elif selected_value == "Done":
                 self.filter = "Done"
+            self.show_reports_page()
 
 if __name__ == "__main__":
     win = Userpage(1)  # you should transfer the user_id to me(with login)

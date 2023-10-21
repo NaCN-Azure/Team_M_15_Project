@@ -3,6 +3,7 @@ import hashlib
 from tkinter import messagebox
 
 from opertor_view import Opertor
+from userPage import Userpage
 from register import Register
 import db.db_config as db
 import db.Bike as Bike
@@ -49,19 +50,23 @@ class Login:
         self.status_label.pack()
 
     def login(self):
-        username = self.login_username.get()
+        email = self.login_username.get()
         password = self.login_password.get()
-        dict = db.query_data(User.login(username))
+        dict = db.query_data(User.login(email))
         if(len(dict)==0):
-            messagebox.showerror("Error", "No user named {}".format(username))
+            messagebox.showerror("Error", "No user named {}".format(email))
             return
         checkmessage = dict[0]
         password_salt = checkmessage['salt'] + password
         hashed_password = hashlib.md5(password_salt.encode()).hexdigest()
         if(hashed_password==checkmessage['password']):
-            ##TODO open page, depend on user_type
 
-            if(checkmessage['user_type']=='Operator'):
+            if(checkmessage['user_type']=='User'):
+                self.root.destroy()
+                user_page = Userpage(checkmessage['id'])
+                user_page.mainloop()
+
+            elif(checkmessage['user_type']=='Operator'):
                 self.root.destroy()
                 opertor_view = Opertor(checkmessage['id'])
                 opertor_view.mainloop()
