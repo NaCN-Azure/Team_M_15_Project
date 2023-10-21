@@ -19,6 +19,8 @@ class Opertor(tk.Tk):
         self.filter = "All"
 
         self.panning = False
+        self.default_map_x = 0
+        self.default_map_y = 0
         self.last_x = 0
         self.last_y = 0
         self.bike_count = 0
@@ -121,8 +123,6 @@ class Opertor(tk.Tk):
     def __tk_canvas_mapBox(self, parent):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233)
-        canvas.bind("<ButtonPress-1>", self.on_map_click)
-        canvas.bind("<B1-Motion>", self.on_map_drag)
         return canvas
     def __tk_canvas_detailed(self,parent):
         canvas = tk.Canvas(parent)
@@ -195,16 +195,18 @@ class Opertor(tk.Tk):
 
 # Map showing method is here!!!!!!!!
     def show_map(self):
+
         self.map_image = Image.open("map.jpg")  # Replace with your map image path
         self.map_width, self.map_height = self.map_image.size
         new_width = int(self.map_width)
         new_height = int(self.map_height)
         resized_image = self.map_image.resize((new_width, new_height))
         self.photo = ImageTk.PhotoImage(resized_image)
-
         # Clear the canvas and display the resized map
         self.tk_canvas_mapBox.delete("all")
-        self.map_item = self.tk_canvas_mapBox.create_image(0, 0, image=self.photo, anchor="nw")
+        self.map_item = self.tk_canvas_mapBox.create_image(0, 0, image=self.photo, anchor="nw") #TODO I will do with pos
+        self.tk_canvas_mapBox.bind("<ButtonPress-1>", self.on_map_click)
+        self.tk_canvas_mapBox.bind("<B1-Motion>", self.on_map_drag)
 
         data = db.query_data(Bike.getAllBike())
         for item in data:
@@ -235,6 +237,8 @@ class Opertor(tk.Tk):
             current_x, current_y = self.tk_canvas_mapBox.coords(self.map_item)
             new_x = current_x + dx
             new_y = current_y + dy
+            self.default_map_x = new_x
+            self.default_map_y = new_y
 
             # Calculate the boundaries
             min_x = 607 - self.map_width
@@ -247,17 +251,16 @@ class Opertor(tk.Tk):
             self.tk_canvas_mapBox.move(self.map_item, new_x - current_x, new_y - current_y)
 
             # Update marker positions
-            for i in range(self.bike_count):
-                x1, y1, x2, y2 = self.tk_canvas_mapBox.coords('marker_%s' % i)
+            for i in range(1,self.bike_count+1):
+                x1, y1, x2, y2 = self.tk_canvas_mapBox.coords('marker_%s' % i) ##TODO
+
                 self.tk_canvas_mapBox.coords('marker_%s' % i, x1 + new_x - current_x, y1 + new_y - current_y,
                                    x2 + new_x - current_x, y2 + new_y - current_y)
-    def add_marker(self, x, y, id,color):
+
+    def add_marker(self, x, y, id, color):
+        # 将红点坐标调整到地图的缩放和平移中
         self.tk_canvas_mapBox.coords('marker_%s' % id, x - 5, y - 5, x + 5, y + 5)
         self.tk_canvas_mapBox.create_oval(x - 5, y - 5, x + 5, y + 5, fill=color, tag='marker_%s' % id)
-
-
-    # def show_marker(self, id):
-    #     tk.messagebox.showinfo(title='Marker %s' % id, message='Marker ID: %s' % id)
 
 ## map method ends!!!!!!!!!!!!!!!1
 

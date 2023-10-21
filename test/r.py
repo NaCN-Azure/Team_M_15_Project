@@ -22,12 +22,6 @@ class MapApp:
         # Display the initial map
         self.show_map()
 
-        # Create a Scale widget with four tick intervals
-        self.scale = tk.Scale(root, from_=1, to=4, orient="horizontal", label="Zoom", resolution=1, command=self.zoom)
-        self.scale.pack()
-        self.scale.set(1.0)  # Initial zoom level
-
-        # Initialize variables for panning
         self.panning = False
         self.last_x = 0
         self.last_y = 0
@@ -77,16 +71,27 @@ class MapApp:
             dy = event.y - self.last_y
             self.last_x = event.x
             self.last_y = event.y
-            self.canvas.move(self.map_item, dx, dy)
 
-            # 更新红点的位置
+            # Calculate the current map position
+            current_x, current_y = self.canvas.coords(self.map_item)
+            new_x = current_x + dx
+            new_y = current_y + dy
+
+            # Calculate the boundaries
+            min_x = 800 - self.map_width
+            min_y = 600 - self.map_height
+
+            # Ensure the new position is within bounds
+            new_x = max(min_x, min(0, new_x))
+            new_y = max(min_y, min(0, new_y))
+
+            self.canvas.move(self.map_item, new_x - current_x, new_y - current_y)
+
+            # Update marker positions
             for i in range(10):
                 x1, y1, x2, y2 = self.canvas.coords('marker_%s' % i)
-                self.canvas.coords('marker_%s' % i, x1 + dx, y1 + dy, x2 + dx, y2 + dy)
-
-    def zoom(self, value):
-        self.zoom_level = float(value)
-        self.show_map()
+                self.canvas.coords('marker_%s' % i, x1 + new_x - current_x, y1 + new_y - current_y,
+                                   x2 + new_x - current_x, y2 + new_y - current_y)
 
 if __name__ == "__main__":
     root = tk.Tk()
