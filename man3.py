@@ -11,9 +11,8 @@ import db.Report as Report
 import db.User as User
 
 # Connect to the SQLite database
-conn = sqlite3.connect('database.db')
+conn = sqlite3.connect('../database.db')
 cursor = conn.cursor()
-
 # Define a function to generate the report and display graphs
 def generate_report_and_graphs():
     # Retrieve user input (start_date and end_date) from GUI elements
@@ -22,7 +21,7 @@ def generate_report_and_graphs():
 
     # Query the database for vehicle activities within the defined time period
     query = """
-        SELECT city, COUNT(*) FROM "Order" 
+        SELECT city, COUNT(*) FROM "order" 
         GROUP BY city
     """
     #WHERE start_date >= ? AND end_date <= ?

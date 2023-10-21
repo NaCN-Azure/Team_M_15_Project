@@ -212,13 +212,18 @@ class BikePage(Tk):
         print(Order.getUnfinishedOrder(self.open_user_id))
         order = db.query_data(Order.getUnfinishedOrder(self.open_user_id))
         start_time = order[0]['start_date']
-        cost = self.count_fee(start_time,current_time)
-        x = self.count_battery(start_time,current_time)  ##TODO
+        start_datetime = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+        end_datetime = datetime.strptime(current_time, "%Y-%m-%d %H:%M:%S")
+        time_difference = end_datetime - start_datetime
+        total_minutes = time_difference.total_seconds() / 60
+        cost = self.count_fee(total_minutes)
+        x = self.count_battery(total_minutes)  ##TODO
         db.insert_or_delete_data(Order.endOrder(order[0]['id'],current_time,to_X,to_Y,cost))
         db.insert_or_delete_data(Bike.returnBike(self.bike_id))
         db.insert_or_delete_data(Bike.lowBattery(self.bike_id,self.bike_dict[0]['battery']-x))
         db.insert_or_delete_data(User.subMoney(self.open_user_id,cost))
         db.insert_or_delete_data(Bike.changelocation(self.bike_id,to_X,to_Y))
+        db.insert_or_delete_data(Bike.addMinutes(self.bike_id,total_minutes))
         messagebox.showinfo("Info", "You have end your order at "+current_time)
         from userPage import Userpage
         u = Userpage(self.open_user_id)
@@ -228,11 +233,7 @@ class BikePage(Tk):
     def cancel_bike(self):
         self.destroy()
 
-    def count_fee(self,start_time,end_time):
-        start_datetime = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
-        end_datetime = datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
-        time_difference = end_datetime - start_datetime
-        total_minutes = time_difference.total_seconds() / 60
+    def count_fee(self,total_minutes):
         total_half_hours = total_minutes / 30
         type = self.bike_dict[0]['bike_type']
         rate = 1
@@ -242,7 +243,7 @@ class BikePage(Tk):
             rate=5
         fee = int(total_half_hours) + rate
         return fee
-    def count_battery(self,start_time,end_time):
+    def count_battery(self,total_minutes):
         return 0 ##TODO
 
     def charge_bike(self):

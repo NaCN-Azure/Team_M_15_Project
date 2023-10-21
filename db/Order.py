@@ -2,8 +2,8 @@
 # TODO...
 def startOrder(user_id,bike_id,start_time,from_X,from_Y):
     data = """
-    INSERT INTO "order" (user_id, bike_id, start_date, from_X, from_Y)
-    VALUES ({}, {}, \'{}\', {}, {})
+    INSERT INTO "order" (user_id, bike_id, start_date, from_X, from_Y,city)
+    VALUES ({}, {}, \'{}\', {}, {},'Glasgow')
     """.format(user_id,bike_id,start_time,from_X,from_Y)
     return data
 

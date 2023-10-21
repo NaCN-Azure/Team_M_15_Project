@@ -8,8 +8,6 @@ def getBikeById(bike_id):
     return 'select * from bike where id = {}'.format(bike_id)
 def getUserByBikeId(bike_id):
     return 'select is_use from bike where id = {}'.format(bike_id)
-def updateLocation(id,longitude,latitude):
-    return 'update bike set longtitue = {} and latitude = {} where id = {}'.format(longitude,latitude, id)
 def getAllBike():
     return 'select * from bike'
 
@@ -40,3 +38,6 @@ def lowBattery(id,battery):
     return 'update bike set battery = {} where id = {}'.format(battery,id)
 def changelocation(id,X,Y):
     return 'update bike set X = {}, Y = {} where id = {}'.format(X,Y,id)
+
+def addMinutes(id,minutes):
+    return 'update user set total_minutes = total_minutes + {} where id = {}'.format(minutes,id)
