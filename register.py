@@ -17,7 +17,7 @@ class Register:
         screen_height = self.root.winfo_screenheight()
 
         window_width = 400
-        window_height = 230
+        window_height = 250
 
         x = (screen_width - window_width) // 2
         y = (screen_height - window_height) // 2

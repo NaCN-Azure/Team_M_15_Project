@@ -9,8 +9,7 @@ def endOrder(id):
     return
 
 def getOrder(id):
-    return 'select * from order where id = {}'.format(id)
+    return 'select * from "order" where id = {}'.format(id)
 
 def getUserOrder(user_id):
-    #TODO
-    return
+    return 'select * from "order" where user_id = {}'.format(user_id)
