@@ -9,9 +9,8 @@ import db.Bike as Bike
 import db.Order as Order
 import db.Report as Report
 import db.User as User
-
 # Connect to the SQLite database
-conn = sqlite3.connect('../database.db')
+conn = sqlite3.connect('db/database.db')
 cursor = conn.cursor()
 # Define a function to generate the report and display graphs
 def generate_report_and_graphs():
