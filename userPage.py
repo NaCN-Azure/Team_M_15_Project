@@ -160,7 +160,7 @@ class Userpage(tk.Tk):
         return canvas
 
     def show_map(self):
-        self.map_image = Image.open("map.jpg")  # Replace with your map image path
+        self.map_image = Image.open(self.city+".jpg")  # Replace with your map image path
         self.map_width, self.map_height = self.map_image.size
         new_width = int(self.map_width)
         new_height = int(self.map_height)

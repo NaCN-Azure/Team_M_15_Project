@@ -199,7 +199,7 @@ class Opertor(tk.Tk):
 
 # Map showing method is here!!!!!!!!
     def show_map(self):
-        self.map_image = Image.open("map.jpg")  # Replace with your map image path
+        self.map_image = Image.open(self.city+".jpg")  # Replace with your map image path
         self.map_width, self.map_height = self.map_image.size
         new_width = int(self.map_width)
         new_height = int(self.map_height)
@@ -334,9 +334,9 @@ class Opertor(tk.Tk):
         self.tk_select_box_type['values'] = ("All", "Bike", "Car")
 
         if(self.filter=="All"):
-            deal_report_data=db.query_data(Bike.getAllBike())
+            deal_report_data=db.query_data(Bike.getAllBike(self.city))
         else:
-            deal_report_data = db.query_data(Bike.getBikeByTypes(self.filter))
+            deal_report_data = db.query_data(Bike.getBikeByTypes(self.filter,self.city))
 
         canvas_height = len(deal_report_data) * 70
         for widget in self.tk_canvas_detailed.winfo_children():

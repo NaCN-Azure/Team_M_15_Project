@@ -1,9 +1,12 @@
 # Packaged sql sentences dealing with User Tables
 # TODO...
 
-def createBike(Bike):
-    # TODO
-    return
+def createBike(X,Y,type,city):
+    data = """
+    INSERT INTO bike (X,Y,bike_type,city,is_broken,is_use,total_minutes,battery)
+    VALUES ({}, {}, \'{}\',\'{}\',0,-1,0,100)
+    """.format(X,Y,type,city)
+    return data
 def getBikeById(bike_id):
     return 'select * from bike where id = {}'.format(bike_id)
 def getUserByBikeId(bike_id):

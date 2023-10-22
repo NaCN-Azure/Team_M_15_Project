@@ -209,7 +209,6 @@ class BikePage(Tk):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         to_X = 40
         to_Y = 100 ##TODO
-        print(Order.getUnfinishedOrder(self.open_user_id))
         order = db.query_data(Order.getUnfinishedOrder(self.open_user_id))
         start_time = order[0]['start_date']
         start_datetime = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
@@ -234,15 +233,17 @@ class BikePage(Tk):
         self.destroy()
 
     def count_fee(self,total_minutes):
-        total_half_hours = total_minutes / 30
         type = self.bike_dict[0]['bike_type']
         rate = 1
         if(type=="Bike"):
             rate=1
         elif(type=="Car"):
             rate=5
-        fee = int(total_half_hours) + rate
-        return fee
+        C = 0
+        while total_minutes >= 30:
+            C += rate
+            total_minutes -= 30
+        return C+rate
     def count_battery(self,total_minutes):
         return 0 ##TODO
 

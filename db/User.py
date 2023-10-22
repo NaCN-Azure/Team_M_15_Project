@@ -30,6 +30,6 @@ def login(email):
 def register(username,email,phone,salt,password,city):
     data = """
     INSERT INTO user (user_name, email, phone, salt, password, wallet, city, user_type)
-    VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\', 0.0, \'{}\', User)
+    VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\', 0.0, \'{}\', 'User')
     """.format(username,email,phone,salt,password,city)
     return data
