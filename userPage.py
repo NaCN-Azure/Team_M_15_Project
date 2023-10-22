@@ -401,19 +401,22 @@ class Userpage(tk.Tk):
         self.now_type = 4
 
         self.tk_frame_info.place(x=10, y=50, width=607, height=233)
-        labels = ["UserName", "Email:", "Phone:", "City:", "Wallet:"]
+        labels = ["UserName:", "Email:", "Phone:", "City:", "Wallet:"]
         keys=["user_name","email","phone","city","wallet"]
         user_info = db.query_data(User.getUserInfo(self.user_id))
 
         for i, label_text in enumerate(labels):
             label = tk.Label(self.tk_frame_info, text=label_text)
-            label.place(x=10, y=10 + i * 40, width=100, height=30)
+            label.place(x=120, y=8 + i * 30, width=100, height=30)
 
             text = tk.Text(self.tk_frame_info)
             text.insert("1.0", user_info[0][keys[i]])
             text.config(state=DISABLED)
-            text.place(x=120, y=10 + i * 40, width=200, height=30)
-            self.vbar(text, 120, 10 + i * 40, 200, 30, self.tk_frame_info)
+            text.place(x=240, y=10 + i * 30, width=200, height=30)
+            self.vbar(text, 240, 8 + i * 30, 200, 30, self.tk_frame_info)
+
+        button_deal = Button(self.tk_frame_info, text="Logout", takefocus=False,command=self.logout)
+        button_deal.place(x=280, y=180, width=50, height=30)
 
     def open_bike_page(self, user_id,bike_id):
         from bike_info import BikePage
@@ -446,6 +449,11 @@ class Userpage(tk.Tk):
             elif selected_value == "Done":
                 self.filter = "Done"
             self.show_reports_page()
+    def logout(self):
+        self.destroy()
+        from log import Login
+        x = Login()
+        x.run()
 
 if __name__ == "__main__":
     win = Userpage(1)  # you should transfer the user_id to me(with login)

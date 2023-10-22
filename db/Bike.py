@@ -43,4 +43,4 @@ def changelocation(id,X,Y):
     return 'update bike set X = {}, Y = {} where id = {}'.format(X,Y,id)
 
 def addMinutes(id,minutes):
-    return 'update user set total_minutes = total_minutes + {} where id = {}'.format(minutes,id)
+    return 'update bike set total_minutes = total_minutes + {} where id = {}'.format(minutes,id)

@@ -382,13 +382,16 @@ class Opertor(tk.Tk):
 
         for i, label_text in enumerate(labels):
             label = tk.Label(self.tk_frame_info, text=label_text)
-            label.place(x=10, y=10 + i * 40, width=100, height=30)
+            label.place(x=120, y=8 + i * 30, width=100, height=30)
 
             text = tk.Text(self.tk_frame_info)
             text.insert("1.0", user_info[0][keys[i]])
             text.config(state=DISABLED)
-            text.place(x=120, y=10 + i * 40, width=200, height=30)
-            self.vbar(text, 120, 10 + i * 40, 200, 30, self.tk_frame_info)
+            text.place(x=240, y=10 + i * 30, width=200, height=30)
+            self.vbar(text, 240, 8 + i * 30, 200, 30, self.tk_frame_info)
+
+        button_deal = Button(self.tk_frame_info, text="Logout", takefocus=False,command=self.logout)
+        button_deal.place(x=280, y=180, width=50, height=30)
 
     def charge(self, bike_id, battery_label, status_label):
         battery = float((battery_label["text"])[:-1])
@@ -457,6 +460,11 @@ class Opertor(tk.Tk):
     def get_username(self,user_id):
         user = db.query_data(User.getUserInfo(user_id))
         return user[0]['user_name']
+    def logout(self):
+        self.destroy()
+        from log import Login
+        x = Login()
+        x.run()
 
 class Opertor_view(Opertor):
     def __init__(self):

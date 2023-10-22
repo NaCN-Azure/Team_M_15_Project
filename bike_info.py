@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter.ttk import *
 from tkinter import simpledialog,messagebox
 from PIL import Image, ImageTk
+import math
 import db.db_config as db
 import db.Bike as Bike
 import db.Order as Order
@@ -207,8 +208,8 @@ class BikePage(Tk):
 
     def return_bike(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        to_X = 40
-        to_Y = 100 ##TODO
+        to_X = simpledialog.askinteger("Your final X:", "Enter the new X coordinate:")
+        to_Y = simpledialog.askinteger("Your final Y:", "Enter the new Y coordinate:") # TODO
         order = db.query_data(Order.getUnfinishedOrder(self.open_user_id))
         start_time = order[0]['start_date']
         start_datetime = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
@@ -216,10 +217,10 @@ class BikePage(Tk):
         time_difference = end_datetime - start_datetime
         total_minutes = time_difference.total_seconds() / 60
         cost = self.count_fee(total_minutes)
-        x = self.count_battery(total_minutes)  ##TODO
+        x = self.count_battery(order[0]['from_X'],order[0]['from_Y'],to_X,to_Y)  ##TODO
         db.insert_or_delete_data(Order.endOrder(order[0]['id'],current_time,to_X,to_Y,cost))
         db.insert_or_delete_data(Bike.returnBike(self.bike_id))
-        db.insert_or_delete_data(Bike.lowBattery(self.bike_id,self.bike_dict[0]['battery']-x))
+        db.insert_or_delete_data(Bike.lowBattery(self.bike_id,x))
         db.insert_or_delete_data(User.subMoney(self.open_user_id,cost))
         db.insert_or_delete_data(Bike.changelocation(self.bike_id,to_X,to_Y))
         db.insert_or_delete_data(Bike.addMinutes(self.bike_id,total_minutes))
@@ -244,8 +245,20 @@ class BikePage(Tk):
             C += rate
             total_minutes -= 30
         return C+rate
-    def count_battery(self,total_minutes):
-        return 0 ##TODO
+    def count_battery(self,from_X,from_Y,to_X,to_Y):
+        type = self.bike_dict[0]['bike_type']
+        rate = 1
+        if (type == "Bike"):
+            rate = 50
+        elif (type == "Car"):
+            rate = 200
+        road = abs(from_X-to_X)+abs(from_Y-to_Y)
+        now_battery = self.bike_dict[0]['battery']
+        lose_battery = max(1,road / rate)
+        if(lose_battery>=now_battery):
+            return 0
+        else:
+            return now_battery-lose_battery
 
     def charge_bike(self):
         battery_text = self.tk_text_battery_box.get("1.0","end-1c")
