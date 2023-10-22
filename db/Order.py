@@ -1,10 +1,10 @@
 # Packaged sql sentences dealing with User Tables
 # TODO...
-def startOrder(user_id,bike_id,start_time,from_X,from_Y):
+def startOrder(user_id,bike_id,start_time,from_X,from_Y,city):
     data = """
     INSERT INTO "order" (user_id, bike_id, start_date, from_X, from_Y,city)
-    VALUES ({}, {}, \'{}\', {}, {},'Glasgow')
-    """.format(user_id,bike_id,start_time,from_X,from_Y)
+    VALUES ({}, {}, \'{}\', {}, {},\'{}\')
+    """.format(user_id,bike_id,start_time,from_X,from_Y,city)
     return data
 
 def endOrder(id,end_time,to_X,to_Y,cost):

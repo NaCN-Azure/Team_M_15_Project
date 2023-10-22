@@ -15,8 +15,9 @@ class Opertor(tk.Tk):
 
         self.user_id = user_id
         self.now_type = 1
-        self.title(self.get_title_name(user_id))
+        self.title(self.get_title_name())
         self.filter = "All"
+        self.city = self.get_city()
 
         self.panning = False
         self.default_map_x = 0
@@ -44,9 +45,12 @@ class Opertor(tk.Tk):
         self.tk_frame_info = self.__tk_frame_info(self.tk_frame_right)
         self.show_map_page()  # default showing map pages
 
-    def get_title_name(self,user_id):
+    def get_title_name(self):
         operator_info = db.query_data(User.getUserInfo(self.user_id))
         return "Operator: " + operator_info[0]['user_name']
+    def get_city(self):
+        operator_info = db.query_data(User.getUserInfo(self.user_id))
+        return operator_info[0]['city']
 
     def __win(self):
         width = 783
@@ -207,9 +211,9 @@ class Opertor(tk.Tk):
 
         ids=[]
         if(self.filter=="All"):
-            data = db.query_data(Bike.getAllBike())
+            data = db.query_data(Bike.getAllBike(self.city))
         else:
-            data = db.query_data(Bike.getBikeByTypes(self.filter))
+            data = db.query_data(Bike.getBikeByTypes(self.filter,self.city))
         for item in data:
             x = item['X']+self.default_map_x
             y = item['Y']+self.default_map_y
@@ -277,9 +281,9 @@ class Opertor(tk.Tk):
         self.tk_select_box_type['values'] = ("All", "Unfinished","Done")
 
         if(self.filter=="All"):
-            report_data=db.query_data(Report.getAllReport())
+            report_data=db.query_data(Report.getAllReport(self.city))
         else:
-            report_data = db.query_data(Report.getReportByStatus(self.filter))
+            report_data = db.query_data(Report.getReportByStatus(self.filter,self.city))
 
         canvas_height = len(report_data) * 70
         for widget in self.tk_canvas_reports_container.winfo_children():
@@ -372,6 +376,19 @@ class Opertor(tk.Tk):
         self.now_type = 4
 
         self.tk_frame_info.place(x=10, y=50, width=607, height=233)
+        labels = ["UserName", "Email:", "Phone:", "City:", "Wallet:"]
+        keys=["user_name","email","phone","city","wallet"]
+        user_info = db.query_data(User.getUserInfo(self.user_id))
+
+        for i, label_text in enumerate(labels):
+            label = tk.Label(self.tk_frame_info, text=label_text)
+            label.place(x=10, y=10 + i * 40, width=100, height=30)
+
+            text = tk.Text(self.tk_frame_info)
+            text.insert("1.0", user_info[0][keys[i]])
+            text.config(state=DISABLED)
+            text.place(x=120, y=10 + i * 40, width=200, height=30)
+            self.vbar(text, 120, 10 + i * 40, 200, 30, self.tk_frame_info)
 
     def charge(self, bike_id, battery_label, status_label):
         battery = float((battery_label["text"])[:-1])

@@ -1,11 +1,10 @@
 # Packaged sql sentences dealing with User Tables
-# TODO...
 
-def createReport(user_id,order_id,bike_id,message,problem_type,date):
+def createReport(user_id,order_id,bike_id,message,problem_type,date,city):
     data = """
     INSERT INTO report (user_id, order_id, bike_id, message, problem_type, is_solved, city, date)
-    VALUES ({}, {}, {}, \'{}\', \'{}\', 0, 'Glasgow', \'{}\')
-    """.format(user_id,order_id,bike_id,message,problem_type,date)
+    VALUES ({}, {}, {}, \'{}\', \'{}\', 0, \'{}\', \'{}\')
+    """.format(user_id,order_id,bike_id,message,problem_type,city,date)
     return data
 
 def getReportByOrderId(id):
@@ -14,19 +13,16 @@ def getReportByOrderId(id):
 def getReportByUserId(user_id):
     return 'select * from report where user_id = {}'.format(user_id)
 
-def getReportByBikeId(bike_id):
-    return 'select * from report where bike_id = {}'.format(bike_id)
+def getAllReport(city):
+    return 'select * from report where city = \'{}\''.format(city)
 
-def getAllReport():
-    return 'select * from report'
-
-def getReportByStatus(status):
+def getReportByStatus(status,city):
     x= 0
     if status=='Done':
         x = 1
     elif status=='Unfinished':
         x = 0
-    return 'select * from report where is_solved = {}'.format(x)
+    return 'select * from report where is_solved = {} and city = \'{}\''.format(x,city)
 
 def getReportByStatusAndUserId(status,user_id):
     x= 0

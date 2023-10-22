@@ -104,10 +104,11 @@ class NewReport(Tk):
         return btn
 
     def on_confirm_button_click(self):
+        info = db.query_data(User.getUserInfo(self.user_id))
         selected_type = self.tk_select_box_type.get()
         message = self.tk_text_message.get(1.0, END)
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        db.insert_or_delete_data(Report.createReport(self.user_id,self.order_id,self.bike_id,message,selected_type,current_time))
+        db.insert_or_delete_data(Report.createReport(self.user_id,self.order_id,self.bike_id,message,selected_type,current_time,info[0]['city']))
         messagebox.showinfo("Info", "Your report is accepted")
         if(selected_type=="Broken"):
             db.query_data(Bike.broken(self.bike_id))

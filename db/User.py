@@ -10,9 +10,6 @@ def addMoney(id,money):
 def subMoney(id,money):
     return 'update user set wallet = wallet - {} where id = {}'.format(money,id)
 
-def getSingleLabel(label,condition,value):
-    return 'select {} from user where {} = \'{}\''.format(label,condition,value)
-
 def getAllUser():
     return 'select * from user where user_type = User'
 
@@ -22,12 +19,6 @@ def getAllOpertor():
 def getAllManager():
     return 'select * from user where user_type = Manager'
 
-def getRoleOfTheUserByUsername(username):
-    return 'select user_type from user where user_name = {}'.format(username)
-
-def getRoleOfTheUserByID(id):
-    return 'select user_type from user where id = {}'.format(id)
-
 def updateUserInfo(user):
     return 'update user ' \
            'set user_name = {}, email = {}, phone = {}, birthday = {}, city = {}' \
@@ -36,9 +27,9 @@ def updateUserInfo(user):
 def login(email):
     return 'select id, password, salt, user_type from user where email = \'{}\''.format(email)
 
-def register(username,email,phone,salt,password):
+def register(username,email,phone,salt,password,city):
     data = """
     INSERT INTO user (user_name, email, phone, salt, password, wallet, city, user_type)
-    VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\', 0.0, 'Glasgow', 1)
-    """.format(username,email,phone,salt,password)
+    VALUES (\'{}\', \'{}\', \'{}\', \'{}\', \'{}\', 0.0, \'{}\', User)
+    """.format(username,email,phone,salt,password,city)
     return data

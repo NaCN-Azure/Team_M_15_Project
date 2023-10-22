@@ -200,7 +200,7 @@ class BikePage(Tk):
             from_X = self.bike_dict[0]['X']
             from_Y = self.bike_dict[0]['Y']
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            db.insert_or_delete_data(Order.startOrder(self.open_user_id,self.bike_id,current_time,from_X,from_Y))
+            db.insert_or_delete_data(Order.startOrder(self.open_user_id,self.bike_id,current_time,from_X,from_Y,self.bike_dict[0]['city']))
             db.insert_or_delete_data(Bike.ownBike(self.open_user_id,self.bike_id))
             messagebox.showinfo("Info", "You have started your order at "+current_time)
             self.destroy()

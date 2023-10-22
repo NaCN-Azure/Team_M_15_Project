@@ -8,8 +8,8 @@ def getBikeById(bike_id):
     return 'select * from bike where id = {}'.format(bike_id)
 def getUserByBikeId(bike_id):
     return 'select is_use from bike where id = {}'.format(bike_id)
-def getAllBike():
-    return 'select * from bike'
+def getAllBike(city):
+    return 'select * from bike where city = \'{}\''.format(city)
 
 def fix(id):
     return 'update bike set is_broken = 0 where id = {}'.format(id)
@@ -20,8 +20,8 @@ def broken(id):
 def changeBattery(id):
     return 'update bike set battery = 100 where id = {}'.format(id)
 
-def getBikeByTypes(bike_type):
-    return 'select * from bike where bike_type = \'{}\''.format(bike_type)
+def getBikeByTypes(bike_type,city):
+    return 'select * from bike where bike_type = \'{}\' and city = \'{}\''.format(bike_type,city)
 
 def getColorForBike(type):
     dict = {'Bike':'red','Car':'blue'}

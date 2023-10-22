@@ -57,8 +57,13 @@ class Register:
         self.reg_confirm_password = tk.Entry(self.reg_frame, show="*", font=("Helvetica", 12))
         self.reg_confirm_password.grid(row=5, column=1)
 
+        self.reg_city_label = tk.Label(self.reg_frame, text="City", font=("Helvetica", 12))
+        self.reg_city_label.grid(row=6, column=0)
+        self.reg_city = tk.Entry(self.reg_frame, show="*", font=("Helvetica", 12))
+        self.reg_city.grid(row=6, column=1)
+
         self.button_frame = tk.Frame(self.reg_frame)
-        self.button_frame.grid(row=6, column=0, columnspan=2)
+        self.button_frame.grid(row=7, column=0, columnspan=2)
 
         self.register_button = tk.Button(self.button_frame, text="Register", command=self.register, font=("Helvetica", 12))
         self.register_button.grid(row=0, column=0, padx=5)
@@ -72,6 +77,7 @@ class Register:
         password = self.reg_password.get()
         confirm_password = self.reg_confirm_password.get()
         phone = self.reg_phone.get()
+        city = self.reg_city.get()
 
         if "@" not in email or email.count("@") != 1:
             messagebox.showerror("Error", "Invalid email format.")
@@ -87,7 +93,7 @@ class Register:
             salt = self.generate_salt()
             hashed_password = self.hash_password(password,salt)
             db.insert_or_delete_data(User.register(
-                username,email,phone,salt,hashed_password
+                username,email,phone,salt,hashed_password,city
             ))
             self.go_back_to_login()
         else:
