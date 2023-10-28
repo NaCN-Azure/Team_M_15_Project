@@ -153,7 +153,7 @@ class ReportPage(Tk):
         db.insert_or_delete_data(Report.doneReport(self.report_id))
         messagebox.showinfo("Successful", "Now this problem is solved")
     def open_detail_page(self, user_id,bike_id):
-        from bike_info import BikePage
+        from bikeInfo import BikePage
         detail_page = BikePage(user_id,bike_id)
         detail_page.mainloop()
     def get_username(self,user_id):

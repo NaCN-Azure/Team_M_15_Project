@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH, DISABLED, messagebox
+from tkinter import VERTICAL, RIGHT, Y, LEFT, BOTH, DISABLED, messagebox,simpledialog
 from tkinter.ttk import *
 import db.db_config as db
 import db.Bike as Bike
@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 import db.Report as Report
 import db.User as User
 
-class Opertor(tk.Tk):
+class Manager(tk.Tk):
     def __init__(self,user_id):
         super().__init__()
         self.__win()
@@ -17,7 +17,7 @@ class Opertor(tk.Tk):
         self.now_type = 1
         self.title(self.get_title_name())
         self.filter = "All"
-        self.city = self.get_city()
+        self.city = 'Glasgow'
 
         self.panning = False
         self.default_map_x = 0
@@ -35,8 +35,10 @@ class Opertor(tk.Tk):
 
         self.tk_frame_right = self.__tk_frame_right(self)
         self.tk_select_box_type = self.__tk_select_box_type(self.tk_frame_right)
-        self.tk_input_search = self.__tk_input_search(self.tk_frame_right)
-        self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
+        self.tk_select_map_type = self.__tk_select_map_type(self.tk_frame_right)
+        self.tk_button_view = self.__tk_button_view(self.tk_frame_right)
+        self.tk_button_add = self.__tk_button_add(self.tk_frame_right)
+
 
         self.tk_canvas_mapBox = self.__tk_canvas_mapBox(self.tk_frame_right)
 
@@ -48,9 +50,6 @@ class Opertor(tk.Tk):
     def get_title_name(self):
         operator_info = db.query_data(User.getUserInfo(self.user_id))
         return "Operator: " + operator_info[0]['user_name']
-    def get_city(self):
-        operator_info = db.query_data(User.getUserInfo(self.user_id))
-        return operator_info[0]['city']
 
     def __win(self):
         width = 783
@@ -93,11 +92,11 @@ class Opertor(tk.Tk):
         btn.place(x=10, y=20, width=80, height=48)
         return btn
     def __tk_button_ReportButton(self, parent):
-        btn = Button(parent, text="Reports", takefocus=False, command=self.show_reports_page)
+        btn = Button(parent, text="Users", takefocus=False, command=self.show_reports_page)
         btn.place(x=10, y=90, width=80, height=48)
         return btn
     def __tk_button_DetailButton(self, parent):
-        btn = Button(parent, text="Details", takefocus=False, command=self.show_detail_page)
+        btn = Button(parent, text="Bikes", takefocus=False, command=self.show_detail_page)
         btn.place(x=10, y=160, width=80, height=48)
         return btn
     def __tk_button_InfoButton(self, parent):
@@ -116,14 +115,22 @@ class Opertor(tk.Tk):
         cb.place(x=476, y=10, width=154, height=32)
         cb.bind("<<ComboboxSelected>>", self.on_combobox_select)
         return cb
-    def __tk_input_search(self, parent):
-        ipt = Entry(parent, )
-        ipt.place(x=90, y=10, width=150, height=30)
-        return ipt
-    def __tk_label_icon(self, parent):
-        label = Label(parent, text="Search: ", anchor="center", )
-        label.place(x=20, y=10, width=50, height=30)
-        return label
+    def __tk_select_map_type(self, parent):
+        cb = Combobox(parent, state="readonly", )
+        cb['values'] = ("Glasgow", "Edinburgh", "Aberdeen","Dundee")
+        cb.set("All")
+        cb.place(x=10, y=10, width=154, height=32)
+        cb.bind("<<ComboboxSelected>>", self.on_combobox_select)
+        return cb
+    def __tk_button_view(self,parent):
+        btn = Button(parent, text="Visualization", takefocus=False, command=self.view)
+        btn.place(x=174, y=10, width=130, height=32)
+        return btn
+
+    def __tk_button_add(self,parent):
+        btn = Button(parent, text="AddNew", takefocus=False, command=self.add)
+        btn.place(x=315, y=10, width=80, height=32)
+        return btn
     def __tk_canvas_mapBox(self, parent):
         canvas = tk.Canvas(parent)
         canvas.place(x=10, y=50, width=607, height=233)
@@ -143,26 +150,26 @@ class Opertor(tk.Tk):
         return canvas
 
 
-    def report_lists(self, parent, user_name, comment, date, frame_index, order_id, report_id):  # this method is to show lots of small frame in a canvas
+    def user_lists(self, parent,frame_index,user_name,user_type,user_id,user_email,wallet):  # this method is to show lots of small frame in a canvas
         frame = Frame(parent)                                               # You can copy it to other place you want
         frame.place(x=5, y=10 + frame_index * 60, width=570, height=50)
         frame.configure(style="My.TFrame")
 
+        label_user_id = Label(frame, text=user_id, anchor="center")
+        label_user_id.place(x=5, y=10, width=50, height=30)
+
+        label_user_type = Label(frame, text=user_type, anchor="center")
+        label_user_type.place(x=60, y=10, width=90, height=30)
+
         label_user = Label(frame, text=user_name, anchor="center")
-        label_user.place(x=5, y=10, width=100, height=30)
+        label_user.place(x=135, y=10, width=100, height=30)
 
-        text_comment = tk.Text(frame)
-        text_comment.place(x=100, y=10, width=250, height=30)
-        text_comment.insert("1.0", comment)
-        text_comment.config(state=DISABLED)  # 设置Text小部件为只读
-        self.vbar(text_comment, 120, 10, 300, 30, frame)
+        label_user_email = Label(frame, text=user_email, anchor="center")
+        label_user_email.place(x=240, y=10, width=150, height=30)
 
-        date_part = date.split()[0]
-        label_date = Label(frame, text=date_part, anchor="center")
-        label_date.place(x=360, y=10, width=100, height=30)
-
-        button_deal = Button(frame, text="Check", takefocus=False, command=lambda id=order_id, report=report_id: self.open_detail_page(id,report))
-        button_deal.place(x=500, y=10, width=50, height=30)
+        if(user_type=='User'):
+            label_user_email = Label(frame, text="wallet: {}".format(wallet), anchor="center")
+            label_user_email.place(x=395, y=10, width=100, height=30)
 
         return frame
 
@@ -186,11 +193,8 @@ class Opertor(tk.Tk):
         label_date = Label(frame, text=status, anchor="center")
         label_date.place(x=210, y=10, width=100, height=30)
 
-        button_charge = Button(frame, text="Charge", takefocus=False, command=lambda id=bike_id, comment=label_battery, status_label=label_date: self.charge(id, comment, status_label))
-        button_charge.place(x=355, y=10, width=60, height=30)
-
-        button_fix = Button(frame, text="Fix", takefocus=False,command=lambda id=bike_id: self.fix(id, label_date))
-        button_fix.place(x=425, y=10, width=60, height=30)
+        button_charge = Button(frame, text="AddSame", takefocus=False,command=lambda type=bike_type,city_name=city:self.add_same(type,city_name))
+        button_charge.place(x=400, y=10, width=70, height=30)
 
         button_check = Button(frame, text="Detail", takefocus=False,command=lambda user=self.user_id,bike=bike_id:self.open_bike_page(user,bike))
         button_check.place(x=495, y=10, width=60, height=30)
@@ -278,12 +282,12 @@ class Opertor(tk.Tk):
         self.tk_canvas_detailed.place_forget()
         self.tk_frame_info.place_forget()
         self.now_type = 2
-        self.tk_select_box_type['values'] = ("All", "Unfinished","Done")
+        self.tk_select_box_type['values'] = ("All")
 
-        if(self.filter=="All"):
-            report_data=db.query_data(Report.getAllReport(self.city))
-        else:
-            report_data = db.query_data(Report.getReportByStatus(self.filter,self.city))
+        user = db.query_data(User.getAllUser(self.city))
+        operator = db.query_data(User.getAllOpertor(self.city))
+        operator.extend(user)
+        report_data = operator
 
         canvas_height = len(report_data) * 70
         for widget in self.tk_canvas_reports_container.winfo_children():
@@ -305,14 +309,14 @@ class Opertor(tk.Tk):
         vbar.configure(command=self.tk_canvas_reports_container.yview) #apply the vbar
 
         for index, data in enumerate(report_data):
-            self.report_lists(
+            self.user_lists(
                 frame,
-                self.get_username(data['user_id']),
-                data["message"],
-                data["date"],
                 index,
-                data['order_id'],
-                data['id']
+                data['user_name'],
+                data['user_type'],
+                data['id'],
+                data['email'],
+                data['wallet']
             )                   # put your list inside the frame, NOT THE CANVAS!
 
     def show_map_page(self):
@@ -393,38 +397,26 @@ class Opertor(tk.Tk):
         button_deal = Button(self.tk_frame_info, text="Logout", takefocus=False,command=self.logout)
         button_deal.place(x=280, y=180, width=50, height=30)
 
-    def charge(self, bike_id, battery_label, status_label):
-        battery = float((battery_label["text"])[:-1])
-        if status_label["text"] == "Using":
-            messagebox.showinfo("Info", "Is been using now!")
-        else:
-            if battery == 100:
-                messagebox.showinfo("Info", "Already full!")
-            else:
-                battery_label.config(text="100.0%")
-                db.insert_or_delete_data(Bike.changeBattery(bike_id))
-                messagebox.showinfo("Info", "Completed")
-
-    def fix(self, bike_id, status_label):
-        status = status_label["text"]
-        if status == "Using":
-            messagebox.showinfo("Info", "Is been using now!")
-        elif status == "Broken":
-            messagebox.showinfo("Info", "Complete!")
-            db.insert_or_delete_data(Bike.fix(bike_id))
-            status_label.config(text="Unused")
-        elif status == "Unused":
-            messagebox.showinfo("Info", "It's OK now")
-
-    def open_detail_page(self, order_id,report_id):
-        from opertor_report_info import ReportPage
-        detail_page = ReportPage(order_id,report_id,self.user_id)
-        detail_page.mainloop()
-
     def open_bike_page(self, user_id,bike_id):
-        from bike_info import BikePage
+        from bikeInfo import BikePage
         detail_page = BikePage(user_id,bike_id)
         detail_page.mainloop()
+
+    def view(self):
+        from man3 import ViewManager
+        view = ViewManager()
+        view.run()
+
+    def add(self):
+        from bikeAdd import BikeAdd
+        win = BikeAdd()
+        win.run()
+
+    def add_same(self,type,city_name):
+        new_x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
+        new_y = simpledialog.askinteger("Enter New Y", "Enter the new Y coordinate:")
+        db.insert_or_delete_data(Bike.createBike(new_x, new_y, type, city_name))
+        messagebox.showinfo("Info", "Completely Created A Same One!")
 
     def on_combobox_select(self, event):
         selected_value = self.tk_select_box_type.get()
@@ -439,14 +431,6 @@ class Opertor(tk.Tk):
                 self.show_detail_page()
             elif(self.now_type==1):
                 self.show_map_page()
-        elif(self.now_type==2):
-            if selected_value == "All":
-                self.filter = "All"
-            elif selected_value == "Unfinished":
-                self.filter = "Unfinished"
-            elif selected_value == "Done":
-                self.filter = "Done"
-            self.show_reports_page()
 
     def show_status_of_bike(self,is_use,is_broken):
         if is_broken==1:
@@ -466,7 +450,7 @@ class Opertor(tk.Tk):
         x = Login()
         x.run()
 
-class Opertor_view(Opertor):
+class Manager_view(Manager):
     def __init__(self):
         super().__init__(self.user_id)
         self.__event_bind()
@@ -475,5 +459,5 @@ class Opertor_view(Opertor):
         pass
 
 if __name__ == "__main__":
-    win = Opertor(3)  # you should transfer the user_id to me(with login)
+    win = Manager(5)  # you should transfer the user_id to me(with login)
     win.mainloop()

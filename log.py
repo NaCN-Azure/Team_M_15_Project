@@ -2,8 +2,9 @@ import tkinter as tk
 import hashlib
 from tkinter import messagebox
 
-from opertor_view import Opertor
+from opertorPage import Opertor
 from userPage import Userpage
+from managerPage import Manager
 from register import Register
 import db.db_config as db
 import db.Bike as Bike
@@ -70,6 +71,12 @@ class Login:
                 self.root.destroy()
                 opertor_view = Opertor(checkmessage['id'])
                 opertor_view.mainloop()
+
+            elif (checkmessage['user_type'] == 'Manager'):
+                self.root.destroy()
+                manager_page = Manager(checkmessage['id'])
+                manager_page.mainloop()
+
             return
         else:
             messagebox.showerror("Error", "Wrong password")

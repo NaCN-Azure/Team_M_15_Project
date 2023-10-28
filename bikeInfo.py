@@ -298,12 +298,14 @@ class BikePage(Tk):
             messagebox.showinfo("Info", "Completely Moved!")
 
     def add_same_bike(self):
-        # add numerous new bikes with same type (Manager)
-        pass
+        new_x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
+        new_y = simpledialog.askinteger("Enter New Y", "Enter the new Y coordinate:")
+        db.insert_or_delete_data(Bike.createBike(new_x,new_y,self.bike_dict['bike_type'],self.bike_dict['city']))
+        messagebox.showinfo("Info", "Completely Created A same one!")
 
     def delete_bike(self):
-        # delete this one (Manager)
-        pass
+        db.insert_or_delete_data(Bike.deleteBikeById(self.bike_id))
+        messagebox.showinfo("Info", "Completely Delete!")
 
 class Win(BikePage):
     def __init__(self):
@@ -314,6 +316,6 @@ class Win(BikePage):
 
 
 if __name__ == "__main__":
-    win = BikePage(1,2)
+    win = BikePage(3,2)
     win.mainloop()
     # print(win.count_fee('2021/03/12 12:00:00','2021/03/12 12:01:00'))

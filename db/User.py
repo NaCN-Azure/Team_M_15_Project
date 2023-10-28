@@ -10,14 +10,11 @@ def addMoney(id,money):
 def subMoney(id,money):
     return 'update user set wallet = wallet - {} where id = {}'.format(money,id)
 
-def getAllUser():
-    return 'select * from user where user_type = User'
+def getAllUser(city):
+    return 'select * from user where user_type = \'User\' and city = \'{}\''.format(city)
 
-def getAllOpertor():
-    return 'select * from user where user_type = Operator'
-
-def getAllManager():
-    return 'select * from user where user_type = Manager'
+def getAllOpertor(city):
+    return 'select * from user where user_type = \'Operator\' and city = \'{}\''.format(city)
 
 def updateUserInfo(user):
     return 'update user ' \

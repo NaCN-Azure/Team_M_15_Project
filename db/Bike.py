@@ -9,6 +9,9 @@ def createBike(X,Y,type,city):
     return data
 def getBikeById(bike_id):
     return 'select * from bike where id = {}'.format(bike_id)
+
+def deleteBikeById(bike_id):
+    return 'delete * from bike where id = {}'.format(bike_id)
 def getUserByBikeId(bike_id):
     return 'select is_use from bike where id = {}'.format(bike_id)
 def getAllBike(city):
