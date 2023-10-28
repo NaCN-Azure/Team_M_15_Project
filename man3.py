@@ -245,7 +245,7 @@ b4 = ttk.Button(win, text="Broken bikes vs Cities", command=disp_broken_bikes_ci
 b4.grid(column=3, row=2, padx=10, pady=10)
 
 b5 = ttk.Button(win, text="Most active users inference", command=disp_orders_by_each)
-b5.grid(column=3, row=2, padx=10, pady=10)
+b5.grid(column=4, row=2, padx=10, pady=10)
 
 
 
