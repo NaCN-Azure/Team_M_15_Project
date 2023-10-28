@@ -9,142 +9,254 @@ import db.Bike as Bike
 import db.Order as Order
 import db.Report as Report
 import db.User as User
-# Connect to the SQLite database
-conn = sqlite3.connect('db/database.db')
-cursor = conn.cursor()
-# Define a function to generate the report and display graphs
-def generate_report_and_graphs():
-    # Retrieve user input (start_date and end_date) from GUI elements
-    start_date = start_date_entry.get()
-    end_date = end_date_entry.get()
 
-    # Query the database for vehicle activities within the defined time period
-    query = """
-        SELECT city, COUNT(*) FROM "order" 
+#Establish Database connection
+openconn = sqlite3.connect('db/database.db')
+dbc = openconn.cursor()
+
+#Creating Data_Visualisation Graphs 
+
+#Graph 1: Customer Distribution over cities of Scotland 
+
+def disp_bar_chart():
+
+    
+
+    for w in gframe.winfo_children():
+        w.destroy()
+
+    dbc.execute("SELECT city, COUNT(*) FROM user where user_type = 'User' GROUP BY city")
+    retrived_detail = dbc.fetchall()
+
+    cities = [row[0] for row in retrived_detail]
+    counts = [row[1] for row in retrived_detail]
+
+    fig_plot, x_data = plt.subplots(figsize=(5, 4))
+    x_data.bar(cities, counts)
+
+    x_data.set_xlabel('Scotland Cities')
+    x_data.set_ylabel('Number of Users')
+    x_data.set_title('Distribution of our users over scotland')
+
+    canvas = FigureCanvasTkAgg(fig_plot, master=gframe)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+
+#Graph 2: bike types vs cities distribution 
+
+def disp_gbar_chart():
+    for w2 in gframe.winfo_children():
+        w2.destroy()
+
+    dbc.execute("""
+        SELECT city, bike_type, COUNT(*) 
+        FROM Bike 
+        GROUP BY city, bike_type
+    """)
+    res2 = dbc.fetchall()
+
+    city_details = set(row[0] for row in res2)
+    bike_typs = set(row[1] for row in res2)
+
+    data = {city: {bike_type: 0 for bike_type in bike_typs} for city in city_details}
+
+    for row in res2:
+        city, bike_type, count = row
+        data[city][bike_type] = count
+
+    #Data for graph building
+    city_labels = list(city_details)
+    bike_type_labels = list(bike_typs)
+    counts = [[data[city][bike_type] for bike_type in bike_type_labels] for city in city_labels]
+
+    #x range definition
+    x = range(len(city_labels))
+
+    #width definition 
+    width = 0.2  
+
+    #grouped bar chart creation 
+    fig2, ax2 = plt.subplots(figsize=(5, 4))
+    for i, bike_type in enumerate(bike_type_labels):
+        ax2.bar([pos + i*width for pos in x], [count[i] for count in counts], width, label=f'{bike_type} Bikes')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax2.set_xlabel('Cities')
+    ax2.set_ylabel('Count')
+    ax2.set_title('Most used vehicle types with respect to cities')
+    ax2.set_xticks([pos + width for pos in x])
+    ax2.set_xticklabels(city_labels)
+    ax2.legend()
+
+    canvas = FigureCanvasTkAgg(fig2, master=gframe)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+
+
+#Graph3 :Income generated over cities 
+def revenue_pie_chart():
+
+    for w3 in gframe.winfo_children():
+        w3.destroy()
+
+
+    dbc.execute("""
+        SELECT city, SUM(cost) 
+        FROM "order" 
         GROUP BY city
-    """
-    #WHERE start_date >= ? AND end_date <= ?
-    cursor.execute(query)
-    results = cursor.fetchall()
+    """)
+    res3 = dbc.fetchall()
 
-    # Display the results in the text box
-    report_text.delete(1.0, tk.END)  # Clear previous report
-    for row in results:
-        report_text.insert(tk.END, f"City: {row[0]}, Count: {row[1]}\n")
+    # Extract city names and corresponding revenues
+    cities3 = [row[0] for row in res3]
+    revenues3 = [row[1] for row in res3]
 
-    # Generate and display graphs
-    display_bar_chart()
-    display_pie_chart()
-    display_line_chart()
-    display_scatter_plot()
-    display_histogram()
 
-# Define functions to create different types of graphs
-def display_bar_chart():
-    cursor.execute("SELECT city, COUNT(*) FROM report GROUP BY city")
-    results = cursor.fetchall()
+    max_revenue_index = revenues3.index(max(revenues3))
 
-    cities = [row[0] for row in results]
-    counts = [row[1] for row in results]
+    labels = [f"{city}" if i == max_revenue_index else city for i, city in enumerate(cities3)]
 
-    fig, ax = plt.subplots()
-    ax.bar(cities, counts)
+    #Pie Chart creation 
+    fig3, ax3 = plt.subplots(figsize=(5, 4))
+    ax3.pie(revenues3, labels=labels, autopct='%1.1f%%', startangle=90)
 
-    ax.set_xlabel('Cities')
-    ax.set_ylabel('Count')
-    ax.set_title('Report Counts by City')
+    ax3.axis('equal')
+    ax3.set_title('Revenue Distribution over Scotland')
 
-    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+    # Embed the pie chart in the Tkinter window
+    canvas = FigureCanvasTkAgg(fig3, master=gframe)
     canvas.draw()
     canvas.get_tk_widget().pack()
 
-def display_pie_chart():
-    cursor.execute("SELECT city, COUNT(*) FROM report GROUP BY city")
-    results = cursor.fetchall()
+#Graph4 :The relevance between the bike type and cities when it comes to vehicle damage 
+def disp_broken_bikes_cities():
 
-    cities = [row[0] for row in results]
-    counts = [row[1] for row in results]
+    for w4 in gframe.winfo_children():
+        w4.destroy()
+   
+    dbc.execute("""
+        SELECT city, bike_type, COUNT(*) 
+        FROM Bike 
+        WHERE is_broken = 1 
+        GROUP BY city, bike_type
+    """)
+    res4 = dbc.fetchall()
 
-    fig, ax = plt.subplots()
-    ax.pie(counts, labels=cities, autopct='%1.1f%%', startangle=90)
+    cities4 = set(row[0] for row in res4)
+    bike_typs4 = set(row[1] for row in res4)
 
-    ax.axis('equal')
-    ax.set_title('Report Distribution by City')
+    data = {city: {bike_type: 0 for bike_type in bike_typs4} for city in cities4}
 
-    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+    for row in res4:
+        city, bike_type, count = row
+        data[city][bike_type] = count
+
+
+    city_labels = list(cities4)
+    bike_type_labels = list(bike_typs4)
+    counts = [[data[city][bike_type] for bike_type in bike_type_labels] for city in city_labels]
+
+
+    x = range(len(city_labels))
+
+
+    width = 0.2  # Adjust as needed
+
+
+    fig4, ax4 = plt.subplots(figsize=(5, 4))
+    for i, bike_type in enumerate(bike_type_labels):
+        ax4.bar([pos + i*width for pos in x], [count[i] for count in counts], width, label=f'{bike_type} Bikes')
+
+
+    ax4.set_xlabel('Cities')
+    ax4.set_ylabel('Count of Broken Bikes')
+    ax4.set_title('Relevance between Broken Bike types and locations ')
+    ax4.set_xticks([pos + width for pos in x])
+    ax4.set_xticklabels(city_labels)
+    ax4.legend()
+
+    canvas = FigureCanvasTkAgg(fig4, master=gframe)
     canvas.draw()
     canvas.get_tk_widget().pack()
 
-def display_line_chart():
-    x_values = list(range(1, 11))
-    y_values = [random.randint(1, 10) for _ in range(10)]
+#Graph 5 : Number of orders placed by each user
+def disp_orders_by_each():
+    for w5 in gframe.winfo_children():
+        w5.destroy()
+   
+    dbc.execute("""
+        SELECT user_id, COUNT(*) as num_orders
+        FROM "order"
+        GROUP BY user_id;
+    """)
+    res5 = dbc.fetchall()
+    act_user_id = [row[0] for row in res5]
+    no_orders = [row[1] for row in res5]
 
-    fig, ax = plt.subplots()
-    ax.plot(x_values, y_values, marker='o')
 
-    ax.set_xlabel('X Values')
-    ax.set_ylabel('Y Values')
-    ax.set_title('Line Chart Example')
+    active_most = act_user_id[no_orders.index(max(no_orders))]
 
-    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+    fig5, ax5 = plt.subplots()
+    ax5.bar(act_user_id, no_orders)
+    ax5.set_xlabel('User ID')
+    ax5.set_ylabel('Number of Orders')
+    ax5.set_title('Most Active User')
+    ax5.text(active_most, max(no_orders), f'Top Active User: {active_most}', ha='left', va='top')
+
+
+    # Create a canvas and display the plot in the existing gframe
+    canvas = FigureCanvasTkAgg(fig5, master=gframe)
     canvas.draw()
     canvas.get_tk_widget().pack()
 
-def display_scatter_plot():
-    x_values = [random.randint(1, 10) for _ in range(10)]
-    y_values = [random.randint(1, 10) for _ in range(10)]
-
-    fig, ax = plt.subplots()
-    ax.scatter(x_values, y_values, color='b', marker='o')
-
-    ax.set_xlabel('X Values')
-    ax.set_ylabel('Y Values')
-    ax.set_title('Scatter Plot Example')
-
-    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
-
-def display_histogram():
-    data = [random.randint(1, 10) for _ in range(100)]
-
-    fig, ax = plt.subplots()
-    ax.hist(data, bins=10, color='b', alpha=0.7)
-
-    ax.set_xlabel('Value')
-    ax.set_ylabel('Frequency')
-    ax.set_title('Histogram Example')
-
-    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
 
 # Create the main window
-root = tk.Tk()
-root.title("Vehicle Activity Report Generator")
+win = tk.Tk()
+win.title("Manager Report Dashboard")
+win.geometry("1000x1000")
 
 # Create and configure the GUI elements
-label_start_date = ttk.Label(root, text="Start Date (YYYY-MM-DD):")
-label_start_date.grid(column=0, row=0, padx=10, pady=10)
+#label_start_date = ttk.Label(win, text="Start Date (YYYY-MM-DD):")
+#label_start_date.grid(column=0, row=0, padx=10, pady=10)
 
-start_date_entry = ttk.Entry(root)
-start_date_entry.grid(column=1, row=0, padx=10, pady=10)
+#start_date_entry = ttk.Entry(win)
+#start_date_entry.grid(column=1, row=0, padx=10, pady=10)
 
-label_end_date = ttk.Label(root, text="End Date (YYYY-MM-DD):")
-label_end_date.grid(column=0, row=1, padx=10, pady=10)
+#label_end_date = ttk.Label(win, text="End Date (YYYY-MM-DD):")
+#label_end_date.grid(column=0, row=1, padx=10, pady=10)
 
-end_date_entry = ttk.Entry(root)
-end_date_entry.grid(column=1, row=1, padx=10, pady=10)
+#end_date_entry = ttk.Entry(win)
+#end_date_entry.grid(column=1, row=1, padx=10, pady=10)
 
-generate_button = ttk.Button(root, text="Generate Report and Display Graphs", command=generate_report_and_graphs)
-generate_button.grid(column=0, row=2, columnspan=2, padx=10, pady=10)
+# Retrieve user input (start_date and end_date) from GUI elements
+#sdate = start_date_entry.get()
+#edate = end_date_entry.get()
 
-report_text = tk.Text(root, height=10, width=50)
-report_text.grid(columnspan=2, row=3, padx=10, pady=10)
+b1 = ttk.Button(win, text="User dist over cities", command=disp_bar_chart)
+b1.grid(column=0, row=2, padx=10, pady=10)
+
+b2 = ttk.Button(win, text="Biketypes vs cities used", command=disp_gbar_chart)
+b2.grid(column=1, row=2, padx=10, pady=10)
+
+b3 = ttk.Button(win, text="Revenue from each city", command=revenue_pie_chart)
+b3.grid(column=2, row=2, padx=10, pady=10)
+
+b4 = ttk.Button(win, text="Broken bikes vs Cities", command=disp_broken_bikes_cities)
+b4.grid(column=3, row=2, padx=10, pady=10)
+
+b5 = ttk.Button(win, text="Most active users inference", command=disp_orders_by_each)
+b5.grid(column=3, row=2, padx=10, pady=10)
+
+
+
+
+
+#report_text = tk.Text(win, height=10, width=50)
+#report_text.grid(columnspan=2, row=3, padx=10, pady=10)
 
 # Create a frame to hold the graphs
-graph_frame = ttk.Frame(root)
-graph_frame.grid(column=0, row=4, columnspan=2, padx=10, pady=10)
+gframe = ttk.Frame(win)
+gframe.grid(column=0, row=4, columnspan=2, padx=10, pady=10)
 
 # Start the Tkinter event loop
-root.mainloop()
+win.mainloop()
