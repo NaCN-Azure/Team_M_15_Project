@@ -118,9 +118,9 @@ class Manager(tk.Tk):
     def __tk_select_map_type(self, parent):
         cb = Combobox(parent, state="readonly", )
         cb['values'] = ("Glasgow", "Edinburgh", "Aberdeen","Dundee")
-        cb.set("All")
+        cb.set("Glasgow")
         cb.place(x=10, y=10, width=154, height=32)
-        cb.bind("<<ComboboxSelected>>", self.on_combobox_select)
+        cb.bind("<<ComboboxSelected>>", self.on_map_select)
         return cb
     def __tk_button_view(self,parent):
         btn = Button(parent, text="Visualization", takefocus=False, command=self.view)
@@ -431,6 +431,15 @@ class Manager(tk.Tk):
                 self.show_detail_page()
             elif(self.now_type==1):
                 self.show_map_page()
+
+    def on_map_select(self,event):
+        self.city = self.tk_select_map_type.get()
+        if(self.now_type==1):
+            self.show_map_page()
+        elif(self.now_type==2):
+            self.show_reports_page()
+        elif(self.now_type==3):
+            self.show_detail_page()
 
     def show_status_of_bike(self,is_use,is_broken):
         if is_broken==1:
