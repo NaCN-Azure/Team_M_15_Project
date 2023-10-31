@@ -154,11 +154,13 @@ class ReportPage(Tk):
         messagebox.showinfo("Successful", "Now this problem is solved")
     def open_detail_page(self, user_id,bike_id):
         from bikeInfo import BikePage
-        detail_page = BikePage(user_id,bike_id)
+        detail_page = BikePage(user_id,bike_id,self.update)
         detail_page.mainloop()
     def get_username(self,user_id):
         user = db.query_data(User.getUserInfo(user_id))
         return user[0]['user_name']
+    def update(self):
+        pass
 
 
 class OpertorReport(ReportPage):

@@ -39,6 +39,7 @@ class Userpage(tk.Tk):
         self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
         self.tk_label_wallet = self.__tk_label_wallet(self.tk_frame_right)
         self.tl_button_money = self.__tk_button_money(self.tk_frame_right)
+        self.tl_button_fresh = self.__tk_button_fresh(self.tk_frame_right)
 
         self.tk_canvas_mapBox = self.__tk_canvas_mapBox(self.tk_frame_right)
 
@@ -139,6 +140,11 @@ class Userpage(tk.Tk):
     def __tk_button_money(self,parent):
         btn = Button(parent, text="Add", takefocus=False, command=self.add_money)
         btn.place(x=250, y=10, width=50, height=30)
+        return btn
+
+    def __tk_button_fresh(self,parent):
+        btn = Button(parent,text='Fresh',command=self.update_function)
+        btn.place(x=310,y=10,width=50,height = 30)
         return btn
 
     def __tk_canvas_mapBox(self, parent):
@@ -420,7 +426,7 @@ class Userpage(tk.Tk):
 
     def open_bike_page(self, user_id,bike_id):
         from bikeInfo import BikePage
-        detail_page = BikePage(user_id,bike_id)
+        detail_page = BikePage(user_id,bike_id,self.update_function)
         detail_page.mainloop()
 
     def report_question(self,order, bike):
@@ -454,7 +460,12 @@ class Userpage(tk.Tk):
         from log import Login
         x = Login()
         x.run()
+    def update_function(self):
+        self.show_map_page()
+        x=self.get_money()
+        self.tk_label_wallet.configure(text=x)
+
 
 if __name__ == "__main__":
-    win = Userpage(1)  # you should transfer the user_id to me(with login)
+    win = Userpage(20)  # you should transfer the user_id to me(with login)
     win.mainloop()

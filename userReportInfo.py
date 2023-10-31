@@ -111,7 +111,7 @@ class NewReport(Tk):
         db.insert_or_delete_data(Report.createReport(self.user_id,self.order_id,self.bike_id,message,selected_type,current_time,info[0]['city']))
         messagebox.showinfo("Info", "Your report is accepted")
         if(selected_type=="Broken"):
-            db.query_data(Bike.broken(self.bike_id))
+            db.insert_or_delete_data(Bike.broken(self.bike_id))
         self.destroy()
 
 

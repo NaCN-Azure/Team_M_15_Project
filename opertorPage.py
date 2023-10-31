@@ -423,7 +423,7 @@ class Opertor(tk.Tk):
 
     def open_bike_page(self, user_id,bike_id):
         from bikeInfo import BikePage
-        detail_page = BikePage(user_id,bike_id)
+        detail_page = BikePage(user_id,bike_id,self.update_function)
         detail_page.mainloop()
 
     def on_combobox_select(self, event):
@@ -465,6 +465,8 @@ class Opertor(tk.Tk):
         from log import Login
         x = Login()
         x.run()
+    def update_function(self):
+        self.show_map_page()
 
 class Opertor_view(Opertor):
     def __init__(self):

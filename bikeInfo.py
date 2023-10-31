@@ -11,9 +11,10 @@ import db.Report as Report
 import db.User as User
 
 class BikePage(Tk):
-    def __init__(self,open_user_id,bike_id):
+    def __init__(self,open_user_id,bike_id,update_function):
         super().__init__()
         self.__win()
+        self.update_function = update_function
         self.open_user_id = open_user_id
         self.bike_id = bike_id
         self.title("BikeId: "+str(bike_id))
@@ -205,6 +206,7 @@ class BikePage(Tk):
             db.insert_or_delete_data(Bike.ownBike(self.open_user_id,self.bike_id))
             messagebox.showinfo("Info", "You have started your order at "+current_time)
             self.destroy()
+            self.update_function()
 
     def return_bike(self):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -225,10 +227,8 @@ class BikePage(Tk):
         db.insert_or_delete_data(Bike.changelocation(self.bike_id,to_X,to_Y))
         db.insert_or_delete_data(Bike.addMinutes(self.bike_id,total_minutes))
         messagebox.showinfo("Info", "You have end your order at "+current_time)
-        from userPage import Userpage
-        u = Userpage(self.open_user_id)
-        u.get_money()
         self.destroy()
+        self.update_function()
 
     def cancel_bike(self):
         self.destroy()
@@ -274,6 +274,7 @@ class BikePage(Tk):
                 self.tk_text_battery_box.insert("1.0", "100%")
                 db.insert_or_delete_data(Bike.changeBattery(self.bike_id))
                 messagebox.showinfo("Info", "Completed")
+                self.update_function()
 
     def fix_bike(self):
         status = self.tk_text_status_box.get("1.0","end-1c")
@@ -284,6 +285,7 @@ class BikePage(Tk):
             db.insert_or_delete_data(Bike.fix(self.bike_id))
             self.tk_text_status_box.delete("1.0", "end")
             self.tk_text_status_box.insert("1.0", "Unused")
+            self.update_function()
         elif status == "Unused":
             messagebox.showinfo("Info", "It's OK now")
 
@@ -296,26 +298,29 @@ class BikePage(Tk):
             new_y = simpledialog.askinteger("Enter New Y", "Enter the new Y coordinate:")
             db.insert_or_delete_data(Bike.changelocation(self.bike_id,new_x,new_y))
             messagebox.showinfo("Info", "Completely Moved!")
+            self.update_function()
 
     def add_same_bike(self):
         new_x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
         new_y = simpledialog.askinteger("Enter New Y", "Enter the new Y coordinate:")
         db.insert_or_delete_data(Bike.createBike(new_x,new_y,self.bike_dict['bike_type'],self.bike_dict['city']))
         messagebox.showinfo("Info", "Completely Created A same one!")
+        self.update_function()
 
     def delete_bike(self):
         db.insert_or_delete_data(Bike.deleteBikeById(self.bike_id))
         messagebox.showinfo("Info", "Completely Delete!")
+        self.update_function()
 
 class Win(BikePage):
     def __init__(self):
-        super().__init__(self.open_user_id,self.bike_id)
+        super().__init__(self.open_user_id,self.bike_id,self.update_function)
         self.__event_bind()
     def __event_bind(self):
         pass
 
 
-if __name__ == "__main__":
-    win = BikePage(3,2)
-    win.mainloop()
+# if __name__ == "__main__":
+#     win = BikePage(3,2)
+#     win.mainloop()
     # print(win.count_fee('2021/03/12 12:00:00','2021/03/12 12:01:00'))
