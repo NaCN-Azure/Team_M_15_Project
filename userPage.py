@@ -39,7 +39,6 @@ class Userpage(tk.Tk):
         self.tk_label_icon = self.__tk_label_icon(self.tk_frame_right)
         self.tk_label_wallet = self.__tk_label_wallet(self.tk_frame_right)
         self.tl_button_money = self.__tk_button_money(self.tk_frame_right)
-        self.tl_button_fresh = self.__tk_button_fresh(self.tk_frame_right)
 
         self.tk_canvas_mapBox = self.__tk_canvas_mapBox(self.tk_frame_right)
 
@@ -140,11 +139,6 @@ class Userpage(tk.Tk):
     def __tk_button_money(self,parent):
         btn = Button(parent, text="Add", takefocus=False, command=self.add_money)
         btn.place(x=250, y=10, width=50, height=30)
-        return btn
-
-    def __tk_button_fresh(self,parent):
-        btn = Button(parent,text='Fresh',command=self.update_function)
-        btn.place(x=310,y=10,width=50,height = 30)
         return btn
 
     def __tk_canvas_mapBox(self, parent):
