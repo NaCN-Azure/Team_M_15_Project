@@ -54,7 +54,7 @@ class Userpage(tk.Tk):
         user = db.query_data(User.getUserInfo(self.user_id))
         return user[0]['wallet']
     def add_money(self):
-        x = simpledialog.askinteger("Enter New X", "Enter the new X coordinate:")
+        x = simpledialog.askinteger("Enter New X", "Enter the number:")
         now = float(self.tk_label_wallet['text'])
         self.tk_label_wallet.configure(text=x+now)
         db.insert_or_delete_data(User.addMoney(self.user_id,x))
