@@ -1,6 +1,0 @@
-step 1: discuss the database and the elements in it
-step 2: draw small demos of the projects
-step 3: done interfaces of our projects(no events of method inside)
-step 4: fill the event of each interfaces or pages( Main tasks for us)
-step 5: check if we can add new methods or requirements
-step 6: finish the report and the vedio
